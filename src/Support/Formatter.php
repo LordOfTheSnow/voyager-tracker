@@ -11,6 +11,11 @@ final class Formatter
         return number_format($km / 1_000_000_000, 1) . 'B km';
     }
 
+    public static function distanceAu(float $au): string
+    {
+        return number_format($au, 1) . ' AU';
+    }
+
     public static function speedKmS(float $kmPerSecond): string
     {
         return number_format($kmPerSecond, 1) . ' km/s';

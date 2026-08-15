@@ -72,22 +72,4 @@ TEXT;
         $this->assertEqualsWithDelta(16.8819410, $row['deldot'], 1e-9);
         $this->assertEqualsWithDelta(256.7593255, $row['eclipticLongitudeDeg'], 1e-9);
     }
-
-    private const ECLIPTIC_LONGITUDE_ONLY_SAMPLE_RESULT = <<<'TEXT'
-*******************************************************************************
-Target body name: Earth (399)
- Date__(UT)__HR:MN        ObsEcLon    ObsEcLat
-**********************************************
-$$SOE
- 2026-Aug-15 00:00     321.8352740   0.0019180
- 2026-Aug-16 00:00     322.7963698   0.0019031
-$$EOE
-TEXT;
-
-    public function testParsesEclipticLongitude(): void
-    {
-        $longitude = HorizonsResponseParser::parseEclipticLongitude(self::ECLIPTIC_LONGITUDE_ONLY_SAMPLE_RESULT);
-
-        $this->assertEqualsWithDelta(321.8352740, $longitude, 1e-9);
-    }
 }

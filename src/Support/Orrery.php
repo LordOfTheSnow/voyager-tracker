@@ -38,4 +38,16 @@ final class Orrery
 
         return $radiusMin + $t * ($radiusMax - $radiusMin);
     }
+
+    /**
+     * Radius on a log10 distance scale: every body stays visible and stays
+     * correctly ordered by distance, at the cost of the spacing between
+     * bodies no longer being linearly proportional to their real distance
+     * apart. $pxPerLogUnit sets how spread out the scale is; $auOffset
+     * (default 1) keeps distances under 1 AU from going negative.
+     */
+    public static function logRadius(float $distanceAu, float $pxPerLogUnit, float $auOffset = 1.0): float
+    {
+        return $pxPerLogUnit * log10($auOffset + max(0.0, $distanceAu));
+    }
 }

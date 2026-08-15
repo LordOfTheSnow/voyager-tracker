@@ -45,6 +45,7 @@ $app->get('/', function ($request, $response) use ($dataService, $twig, $appConf
         $v1 = $dataService->getSummary('voyager-1');
         $v2 = $dataService->getSummary('voyager-2');
         $orrery = $dataService->getOrreryLayout();
+        $distanceModal = $dataService->getDistanceModalLayout();
     } catch (\Throwable) {
         return $renderDataError($request, $response, $twig);
     }
@@ -53,6 +54,7 @@ $app->get('/', function ($request, $response) use ($dataService, $twig, $appConf
         'v1' => $v1,
         'v2' => $v2,
         'orrery' => $orrery,
+        'distanceModal' => $distanceModal,
         'stale' => $v1['stale'] || $v2['stale'],
         'updatedLabel' => $v1['updatedLabel'],
         'refreshCadenceLabel' => $appConfig['refreshCadenceLabel'],

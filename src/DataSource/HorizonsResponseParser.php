@@ -42,14 +42,6 @@ final class HorizonsResponseParser
         ];
     }
 
-    /** Row requested with QUANTITIES=31 only: just ecliptic longitude/latitude. */
-    public static function parseEclipticLongitude(string $result): float
-    {
-        $columns = self::firstDataRowColumns($result, minColumns: 3);
-
-        return (float) $columns[2];
-    }
-
     /** @return list<string> */
     private static function firstDataRowColumns(string $result, int $minColumns): array
     {

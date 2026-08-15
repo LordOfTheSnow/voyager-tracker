@@ -1,5 +1,29 @@
 {% extends "layout.twig" %}
 
+{% macro distanceModalBody(slug, body, v1, v2, sunRadiusPx) %}
+  {% if slug not in ['sun', 'v1', 'v2'] %}
+    {# V1/V2 are on escape trajectories, not closed orbits, so no ring for them. Center must match VoyagerDataService::DISTANCE_MODAL_CENTER. #}
+    <circle cx="450" cy="450" r="{{ body.radiusPx }}" fill="none" stroke="var(--color-divider)"></circle>
+  {% endif %}
+  {% if slug == 'sun' %}
+    <circle cx="{{ body.x }}" cy="{{ body.y }}" r="{{ sunRadiusPx }}" fill="var(--color-accent)"></circle>
+    <text x="{{ body.x + sunRadiusPx + 6 }}" y="{{ body.y + 5 }}" font-size="14" fill="var(--color-text)">Sun</text>
+  {% elseif slug == 'earth' %}
+    <circle cx="{{ body.x }}" cy="{{ body.y }}" r="4" fill="#8ec5eb"></circle>
+    <text x="{{ body.x + 9 }}" y="{{ body.y + 4 }}" font-size="12" fill="var(--color-text)">Earth</text>
+    <text x="{{ body.x + 9 }}" y="{{ body.y + 17 }}" font-size="9" fill="var(--color-neutral-500)">{{ body.distanceLabel }}</text>
+  {% elseif slug in ['v1', 'v2'] %}
+    <circle cx="{{ body.x }}" cy="{{ body.y }}" r="5" fill="var(--color-accent)" class="pulse-dot {{ (slug == 'v1' ? v1.inContact : v2.inContact) ? '' : 'is-dormant' }}"></circle>
+    <text x="{{ body.x + 10 }}" y="{{ body.y + 4 }}" font-size="12" fill="var(--color-text)">{{ body.label }}</text>
+    <text x="{{ body.x + 10 }}" y="{{ body.y + 17 }}" font-size="9" fill="var(--color-neutral-500)">{{ body.distanceLabel }}</text>
+  {% else %}
+    <circle cx="{{ body.x }}" cy="{{ body.y }}" r="4" fill="var(--color-neutral-300)"></circle>
+    <text x="{{ body.x + 9 }}" y="{{ body.y + 4 }}" font-size="12" fill="var(--color-text)">{{ body.label }}</text>
+    <text x="{{ body.x + 9 }}" y="{{ body.y + 17 }}" font-size="9" fill="var(--color-neutral-500)">{{ body.distanceLabel }}</text>
+  {% endif %}
+{% endmacro %}
+{% from _self import distanceModalBody %}
+
 {% block content %}
 
 <div class="page-header">
@@ -18,6 +42,7 @@
       <div class="orrery-actions">
         <button class="btn btn-icon btn-secondary" @click="zoomOut()" aria-label="Zoom out"><i class="ph ph-minus"></i></button>
         <button class="btn btn-icon btn-secondary" @click="zoomIn()" aria-label="Zoom in"><i class="ph ph-plus"></i></button>
+        <button class="btn btn-icon btn-secondary" @click="$dispatch('open-distance-modal')" aria-label="Expand to full real-distance view"><i class="ph ph-arrows-out"></i></button>
       </div>
     </div>
 
@@ -30,14 +55,11 @@
       <circle cx="{{ orrery.wideSun.x }}" cy="{{ orrery.wideSun.y }}" r="106" fill="none" stroke="var(--color-divider)"></circle>
       <circle cx="{{ orrery.wideSun.x }}" cy="{{ orrery.wideSun.y }}" r="130" fill="none" stroke="var(--color-divider)" stroke-dasharray="2 4"></circle>
       <text x="122" y="53" font-size="10" fill="var(--color-neutral-500)">Pluto's orbit</text>
-      <circle cx="173" cy="185" r="2.5" fill="var(--color-neutral-300)"></circle>
-      <circle cx="163" cy="198" r="2.5" fill="var(--color-neutral-300)"></circle>
-      <circle cx="182" cy="176" r="2.5" fill="var(--color-neutral-300)"></circle>
-      <circle cx="173" cy="203" r="2.5" fill="var(--color-neutral-300)"></circle>
-      <circle cx="123" cy="211" r="2.5" fill="var(--color-neutral-300)"></circle><text x="98" y="223" font-size="8" fill="var(--color-neutral-500)">Jupiter</text>
-      <circle cx="100" cy="158" r="2.5" fill="var(--color-neutral-300)"></circle><text x="70" y="155" font-size="8" fill="var(--color-neutral-500)">Saturn</text>
-      <circle cx="129" cy="95" r="2.5" fill="var(--color-neutral-300)"></circle><text x="100" y="88" font-size="8" fill="var(--color-neutral-500)">Uranus</text>
-      <circle cx="179" cy="70" r="2.5" fill="var(--color-neutral-300)"></circle><text x="184" y="68" font-size="8" fill="var(--color-neutral-500)">Neptune</text>
+      <circle cx="{{ orrery.wideEarth.x }}" cy="{{ orrery.wideEarth.y }}" r="2.5" fill="#8ec5eb"></circle>
+      {% for planet in orrery.widePlanets %}
+      <circle cx="{{ planet.x }}" cy="{{ planet.y }}" r="2.5" fill="var(--color-neutral-300)"></circle>
+      <text x="{{ planet.x + 6 }}" y="{{ planet.y + 4 }}" font-size="8" fill="var(--color-neutral-500)">{{ planet.label }}</text>
+      {% endfor %}
       <line x1="{{ orrery.wideSun.x }}" y1="{{ orrery.wideSun.y }}" x2="{{ orrery.wideV1.x }}" y2="{{ orrery.wideV1.y }}" stroke="var(--color-accent-600)" stroke-dasharray="2 4"></line>
       <circle cx="{{ orrery.wideV1.x }}" cy="{{ orrery.wideV1.y }}" r="4" fill="var(--color-accent)" class="pulse-dot {{ v1.inContact ? '' : 'is-dormant' }}"></circle>
       <text x="{{ orrery.wideV1.x - 13 }}" y="{{ orrery.wideV1.y - 6 }}" font-size="10" fill="var(--color-text)">V1</text>
@@ -97,6 +119,48 @@
       <p class="card-body" style="opacity:.85">Both probes launched in 1977 &middot; both have crossed the heliopause and are now in interstellar space.</p>
     </div>
 
+  </div>
+</div>
+
+<div x-data="distanceModal" x-on:open-distance-modal.window="show()" x-show="open" x-cloak
+     class="modal-overlay" @keydown.escape.window="hide()">
+  <div class="modal-panel" @click.outside="hide()">
+    <div class="modal-head">
+      <span class="card-title">Solar system — real distances</span>
+      <div class="modal-scale-toggle">
+        <button class="btn btn-secondary" :class="scaleMode === 'log' ? 'is-active' : ''" @click="setScaleMode('log')">Log scale</button>
+        <button class="btn btn-secondary" :class="scaleMode === 'linear' ? 'is-active' : ''" @click="setScaleMode('linear')">True linear scale</button>
+      </div>
+      <button class="btn btn-icon btn-secondary" @click="hide()" aria-label="Close"><i class="ph ph-x"></i></button>
+    </div>
+
+    <svg class="modal-canvas" viewBox="0 0 900 900" width="100%" height="600"
+         :style="dragging ? 'cursor:grabbing' : 'cursor:grab'"
+         @wheel.prevent="onWheel($event)"
+         @mousedown="startDrag($event)" @mousemove.window="drag($event)" @mouseup.window="endDrag()"
+         @touchstart="startDrag($event)" @touchmove.prevent="drag($event)" @touchend="endDrag()">
+      <g :transform="transform">
+        <g x-show="scaleMode === 'log'">
+          {% for slug, body in distanceModal.log %}
+            {{ distanceModalBody(slug, body, v1, v2, 10) }}
+          {% endfor %}
+        </g>
+        <g x-show="scaleMode === 'linear'">
+          {# Real linear scale puts Earth just ~4.5px from the Sun's center (1 AU * 4.5px/AU) -- a
+             decorative Sun any bigger than that would visually swallow it, so keep this one tiny. #}
+          {% for slug, body in distanceModal.linear %}
+            {{ distanceModalBody(slug, body, v1, v2, 2) }}
+          {% endfor %}
+        </g>
+      </g>
+    </svg>
+
+    <div class="modal-controls">
+      <button class="btn btn-icon btn-secondary" @click="zoomOut()" aria-label="Zoom out"><i class="ph ph-minus"></i></button>
+      <button class="btn btn-icon btn-secondary" @click="zoomIn()" aria-label="Zoom in"><i class="ph ph-plus"></i></button>
+      <button class="btn btn-secondary" @click="resetView()">Reset view</button>
+    </div>
+    <p class="card-body text-muted" style="font-size:12px" x-text="caption"></p>
   </div>
 </div>
 

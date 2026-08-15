@@ -32,7 +32,13 @@ final class HorizonsClient
     ) {
     }
 
-    /** @return array{distanceFromSunKm: float, speedKmS: float, eclipticLongitudeDeg: float} */
+    /**
+     * Also used for Earth and the outer planet barycenters (5=Jupiter,
+     * 6=Saturn, 7=Uranus, 8=Neptune, 9=Pluto, 399=Earth) to place them on
+     * the orrery -- "speed" is meaningless for those and simply unused.
+     *
+     * @return array{distanceFromSunKm: float, speedKmS: float, eclipticLongitudeDeg: float}
+     */
     public function fetchSunCentered(string $spkId): array
     {
         $result = $this->fetchEphemeris($spkId, center: '500@10', quantities: '20,31');
@@ -55,14 +61,6 @@ final class HorizonsClient
             'distanceFromEarthKm' => $row['delta'] * self::AU_IN_KM,
             'lightTimeMinutes' => $row['lightTimeMinutes'],
         ];
-    }
-
-    /** Earth's own heliocentric ecliptic longitude -- its real position on its orbit. */
-    public function fetchEarthEclipticLongitude(): float
-    {
-        $result = $this->fetchEphemeris('399', center: '500@10', quantities: '31');
-
-        return HorizonsResponseParser::parseEclipticLongitude($result);
     }
 
     private function fetchEphemeris(string $spkId, string $center, string $quantities): string

@@ -36,4 +36,28 @@ final class OrreryTest extends TestCase
     {
         $this->assertEqualsWithDelta(230.0, Orrery::normalizeRadius(150.0, 150.0, 150.0, 200.0, 260.0), 1e-9);
     }
+
+    public function testLogRadiusIsZeroAtTheOffset(): void
+    {
+        $this->assertEqualsWithDelta(0.0, Orrery::logRadius(0.0, 170.0), 1e-9);
+    }
+
+    public function testLogRadiusGrowsSlowerThanDistance(): void
+    {
+        $earthRadius = Orrery::logRadius(1.0, 170.0);
+        $plutoRadius = Orrery::logRadius(35.6, 170.0);
+        $voyager1Radius = Orrery::logRadius(171.4, 170.0);
+
+        // Pluto is ~35x farther than Earth, but its plotted radius is nowhere near 35x Earth's.
+        $this->assertGreaterThan($earthRadius, $plutoRadius);
+        $this->assertLessThan($earthRadius * 35, $plutoRadius);
+
+        // Still correctly ordered even out at interstellar distances.
+        $this->assertGreaterThan($plutoRadius, $voyager1Radius);
+    }
+
+    public function testLogRadiusNeverGoesNegativeForOutOfRangeInput(): void
+    {
+        $this->assertEqualsWithDelta(0.0, Orrery::logRadius(-5.0, 170.0), 1e-9);
+    }
 }
