@@ -1,0 +1,12 @@
+{% extends "layout.twig" %}
+
+{% block title %}Unavailable — Voyager Distance Tracker{% endblock %}
+
+{% block content %}
+<div class="card elev-sm error-card">
+  <h6 style="color:var(--color-accent)">DATA UNAVAILABLE</h6>
+  <h2>Live tracking is temporarily down</h2>
+  <p class="card-body">We couldn't reach JPL Horizons or DSN Now, and there's no cached data yet to fall back to. This should resolve itself &mdash; {{ refreshCadenceLabel }}.</p>
+  <a href="/" class="btn btn-secondary" style="align-self:center;margin-top:var(--space-2)">Try again</a>
+</div>
+{% endblock %}

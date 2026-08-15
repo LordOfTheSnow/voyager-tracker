@@ -1,0 +1,9 @@
+/vendor/
+/var/cache/*.json
+.phpunit.result.cache
+
+# Duplicate of the already-extracted design_handoff_voyager_tracker/ folder
+/Voyager Distance Tracker App.zip
+
+# Design reference material - not meant for the (eventually public) repo
+/design_handoff_voyager_tracker/

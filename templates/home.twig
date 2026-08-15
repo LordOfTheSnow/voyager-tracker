@@ -1,0 +1,105 @@
+{% extends "layout.twig" %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h6 style="color:var(--color-accent)">LIVE TRACKING</h6>
+    <h1>Where are the Voyagers now?</h1>
+  </div>
+  <div class="tag tag-outline"><i class="ph ph-arrows-clockwise"></i>updated {{ updatedLabel }} &middot; {{ refreshCadenceLabel }}</div>
+</div>
+
+<div class="home-grid">
+
+  <div class="card elev-sm orrery-card" x-data="homeOrrery">
+    <div class="orrery-card-head">
+      <span class="card-kicker">Position — solar system view</span>
+      <div class="orrery-actions">
+        <button class="btn btn-icon btn-secondary" @click="zoomOut()" aria-label="Zoom out"><i class="ph ph-minus"></i></button>
+        <button class="btn btn-icon btn-secondary" @click="zoomIn()" aria-label="Zoom in"><i class="ph ph-plus"></i></button>
+      </div>
+    </div>
+
+    <svg x-show="isZoomOut" width="100%" height="360" viewBox="0 0 320 360" style="display:block;margin:var(--space-2) 0">
+      <circle cx="{{ orrery.wideSun.x }}" cy="{{ orrery.wideSun.y }}" r="7" fill="var(--color-accent)"></circle>
+      <circle cx="{{ orrery.wideSun.x }}" cy="{{ orrery.wideSun.y }}" r="20" fill="none" stroke="var(--color-divider)"></circle>
+      <circle cx="{{ orrery.wideSun.x }}" cy="{{ orrery.wideSun.y }}" r="40" fill="none" stroke="var(--color-divider)"></circle>
+      <circle cx="{{ orrery.wideSun.x }}" cy="{{ orrery.wideSun.y }}" r="62" fill="none" stroke="var(--color-divider)"></circle>
+      <circle cx="{{ orrery.wideSun.x }}" cy="{{ orrery.wideSun.y }}" r="84" fill="none" stroke="var(--color-divider)"></circle>
+      <circle cx="{{ orrery.wideSun.x }}" cy="{{ orrery.wideSun.y }}" r="106" fill="none" stroke="var(--color-divider)"></circle>
+      <circle cx="{{ orrery.wideSun.x }}" cy="{{ orrery.wideSun.y }}" r="130" fill="none" stroke="var(--color-divider)" stroke-dasharray="2 4"></circle>
+      <text x="122" y="53" font-size="10" fill="var(--color-neutral-500)">Pluto's orbit</text>
+      <circle cx="173" cy="185" r="2.5" fill="var(--color-neutral-300)"></circle>
+      <circle cx="163" cy="198" r="2.5" fill="var(--color-neutral-300)"></circle>
+      <circle cx="182" cy="176" r="2.5" fill="var(--color-neutral-300)"></circle>
+      <circle cx="173" cy="203" r="2.5" fill="var(--color-neutral-300)"></circle>
+      <circle cx="123" cy="211" r="2.5" fill="var(--color-neutral-300)"></circle><text x="98" y="223" font-size="8" fill="var(--color-neutral-500)">Jupiter</text>
+      <circle cx="100" cy="158" r="2.5" fill="var(--color-neutral-300)"></circle><text x="70" y="155" font-size="8" fill="var(--color-neutral-500)">Saturn</text>
+      <circle cx="129" cy="95" r="2.5" fill="var(--color-neutral-300)"></circle><text x="100" y="88" font-size="8" fill="var(--color-neutral-500)">Uranus</text>
+      <circle cx="179" cy="70" r="2.5" fill="var(--color-neutral-300)"></circle><text x="184" y="68" font-size="8" fill="var(--color-neutral-500)">Neptune</text>
+      <line x1="{{ orrery.wideSun.x }}" y1="{{ orrery.wideSun.y }}" x2="{{ orrery.wideV1.x }}" y2="{{ orrery.wideV1.y }}" stroke="var(--color-accent-600)" stroke-dasharray="2 4"></line>
+      <circle cx="{{ orrery.wideV1.x }}" cy="{{ orrery.wideV1.y }}" r="4" fill="var(--color-accent)" class="pulse-dot {{ v1.inContact ? '' : 'is-dormant' }}"></circle>
+      <text x="{{ orrery.wideV1.x - 13 }}" y="{{ orrery.wideV1.y - 6 }}" font-size="10" fill="var(--color-text)">V1</text>
+      <line x1="{{ orrery.wideSun.x }}" y1="{{ orrery.wideSun.y }}" x2="{{ orrery.wideV2.x }}" y2="{{ orrery.wideV2.y }}" stroke="var(--color-accent-600)" stroke-dasharray="2 4"></line>
+      <circle cx="{{ orrery.wideV2.x }}" cy="{{ orrery.wideV2.y }}" r="4" fill="var(--color-accent)" class="pulse-dot {{ v2.inContact ? '' : 'is-dormant' }}"></circle>
+      <text x="{{ orrery.wideV2.x - 13 }}" y="{{ orrery.wideV2.y - 5 }}" font-size="10" fill="var(--color-text)">V2</text>
+    </svg>
+
+    <svg x-show="!isZoomOut" width="100%" height="360" viewBox="0 0 320 360" style="display:block;margin:var(--space-2) 0">
+      <circle cx="{{ orrery.sun.x }}" cy="{{ orrery.sun.y }}" r="8" fill="var(--color-accent)"></circle>
+      <circle cx="{{ orrery.sun.x }}" cy="{{ orrery.sun.y }}" r="26" fill="none" stroke="var(--color-divider)"></circle>
+      <circle cx="{{ orrery.earth.x }}" cy="{{ orrery.earth.y }}" r="3" fill="var(--color-neutral-300)"></circle>
+      <text x="{{ orrery.earth.x + 4 }}" y="{{ orrery.earth.y + 4 }}" font-size="10" fill="var(--color-neutral-500)">Earth</text>
+      <line x1="{{ orrery.sun.x }}" y1="{{ orrery.sun.y }}" x2="{{ orrery.v1.x }}" y2="{{ orrery.v1.y }}" stroke="var(--color-accent-600)" stroke-dasharray="2 4"></line>
+      <circle cx="{{ orrery.v1.x }}" cy="{{ orrery.v1.y }}" r="4" fill="var(--color-accent)" class="pulse-dot {{ v1.inContact ? '' : 'is-dormant' }}"></circle>
+      <text x="{{ orrery.v1.x + 6 }}" y="{{ orrery.v1.y + 4 }}" font-size="11" fill="var(--color-text)">V1</text>
+      <line x1="{{ orrery.sun.x }}" y1="{{ orrery.sun.y }}" x2="{{ orrery.v2.x }}" y2="{{ orrery.v2.y }}" stroke="var(--color-accent-600)" stroke-dasharray="2 4"></line>
+      <circle cx="{{ orrery.v2.x }}" cy="{{ orrery.v2.y }}" r="4" fill="var(--color-accent)" class="pulse-dot {{ v2.inContact ? '' : 'is-dormant' }}"></circle>
+      <text x="{{ orrery.v2.x + 6 }}" y="{{ orrery.v2.y + 4 }}" font-size="11" fill="var(--color-text)">V2</text>
+    </svg>
+
+    <p class="card-body" style="opacity:.6;font-size:12px" x-text="caption"></p>
+  </div>
+
+  <div class="probe-stack">
+
+    {% for v in [v1, v2] %}
+    <div class="card elev-sm probe-card" x-data="expandable">
+      <div class="probe-card-head">
+        <span class="card-title">{{ v.name }}</span>
+        <span class="tag {{ v.inContact ? 'tag-accent' : 'tag-neutral' }}"><i class="ph ph-broadcast"></i>{{ v.signalLabel }}</span>
+      </div>
+      <div class="stat-grid-3">
+        <div><div class="text-muted stat-label">Dist. from Sun</div><div class="stat-value">{{ v.distanceFromSun }}</div></div>
+        <div><div class="text-muted stat-label">Speed</div><div class="stat-value">{{ v.speed }}</div></div>
+        <div><div class="text-muted stat-label">Light time</div><div class="stat-value">{{ v.oneWayLightTime }}</div></div>
+      </div>
+      <div x-show="expanded">
+        <div class="hr"></div>
+        <div class="stat-grid-3">
+          <div><div class="text-muted stat-label">Dist. from Earth</div><div class="stat-value-sm">{{ v.distanceFromEarth }}</div></div>
+          <div><div class="text-muted stat-label">Days since launch</div><div class="stat-value-sm">{{ v.daysSinceLaunch }}</div></div>
+          <div><div class="text-muted stat-label">Location</div><div class="stat-value-sm">{{ v.location }}</div></div>
+          <div><div class="text-muted stat-label">Mission health</div><div class="stat-value-sm">{{ v.instrumentSummary }}</div></div>
+          <div><div class="text-muted stat-label">Constellation</div><div class="stat-value-sm">{{ v.constellation }}</div></div>
+          <div style="display:flex;align-items:center"><a href="/{{ v.slug }}" class="btn btn-ghost">Full detail page <i class="ph ph-arrow-right"></i></a></div>
+        </div>
+      </div>
+      <button class="btn btn-secondary" style="align-self:flex-start" @click="toggle()">
+        <span x-text="label"></span> <i :class="expanded ? 'ph ph-caret-up' : 'ph ph-caret-down'"></i>
+      </button>
+    </div>
+    {% endfor %}
+
+    <div class="card quick-facts">
+      <span class="card-kicker">Quick facts</span>
+      <p class="card-body" style="opacity:.85">Both probes launched in 1977 &middot; both have crossed the heliopause and are now in interstellar space.</p>
+    </div>
+
+  </div>
+</div>
+
+{% include '_footer.twig' %}
+
+{% endblock %}
