@@ -176,7 +176,10 @@ a:hover { color: var(--color-accent-300); }
 .modal-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
 .modal-scale-toggle { display: flex; gap: var(--space-2); }
 .modal-scale-toggle .btn.is-active { border-color: var(--color-accent); color: var(--color-accent); }
-.modal-canvas { background: var(--color-bg); border-radius: var(--radius-md); display: block; touch-action: none; }
+.modal-canvas {
+  background: var(--color-bg); border-radius: var(--radius-md); display: block; touch-action: none;
+  width: min(100%, 70vh); aspect-ratio: 1 / 1; height: auto;
+}
 .modal-controls { display: flex; align-items: center; gap: var(--space-2); }
 [x-cloak] { display: none !important; }
 
@@ -196,6 +199,8 @@ a:hover { color: var(--color-accent-300); }
 
 .detail-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); margin-bottom: var(--space-6); }
 .detail-stat-value { font-size: 26px; font-family: var(--font-heading); }
+.detail-stat-value-precise { font-size: 19px; }
+.detail-stat-sub { font-size: 11px; margin-top: var(--space-1); }
 .detail-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); margin-bottom: var(--space-6); }
 .detail-instruments { padding: var(--space-4); margin-bottom: var(--space-6); }
 

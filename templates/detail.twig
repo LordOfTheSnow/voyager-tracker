@@ -16,9 +16,13 @@
 </div>
 
 <div class="detail-stats">
-  <div class="card elev-sm"><span class="card-kicker">Dist. from Sun</span><div class="detail-stat-value">{{ probe.distanceFromSun }}</div></div>
-  <div class="card elev-sm"><span class="card-kicker">Dist. from Earth</span><div class="detail-stat-value">{{ probe.distanceFromEarth }}</div></div>
-  <div class="card elev-sm"><span class="card-kicker">Speed</span><div class="detail-stat-value">{{ probe.speed }}</div></div>
+  <div class="card elev-sm"><span class="card-kicker">Dist. from Sun</span><div class="detail-stat-value detail-stat-value-precise">{{ probe.distanceFromSunPrecise }}</div></div>
+  <div class="card elev-sm"><span class="card-kicker">Dist. from Earth</span><div class="detail-stat-value detail-stat-value-precise">{{ probe.distanceFromEarthPrecise }}</div></div>
+  <div class="card elev-sm">
+    <span class="card-kicker">Speed</span>
+    <div class="detail-stat-value">{{ probe.speed }}</div>
+    <div class="text-muted detail-stat-sub">{{ probe.speedKmH }} &middot; {{ probe.speedMph }}</div>
+  </div>
   <div class="card elev-sm"><span class="card-kicker">One-way light time</span><div class="detail-stat-value">{{ probe.oneWayLightTime }}</div></div>
 </div>
 

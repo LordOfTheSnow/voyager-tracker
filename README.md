@@ -53,3 +53,72 @@ missing, but the parent `var/` directory must be writable).
 
 No cron job is required — the cache refreshes lazily on request — but one
 could be added later to pre-warm the cache if desired.
+
+## Updating
+
+To pull in new code and dependencies on an existing SSH deployment:
+
+```
+ssh you@host
+cd /path/to/app
+git pull
+composer install --no-dev --optimize-autoloader
+```
+
+`composer install` reads the committed `composer.lock` and installs exactly
+the dependency versions that were tested locally — unlike `composer update`,
+it never changes what version of anything gets installed. No cache clear or
+process restart is needed afterward: `var/cache/` entries just expire on
+their own 15-minute TTL (`config/app.php`) and get refreshed on the next
+request.
+
+To actually bump a dependency to a newer version, do that locally first, not
+on the server:
+
+```
+composer update vendor/package     # or just `composer update` for everything
+composer test                      # confirm nothing broke
+git add composer.json composer.lock
+git commit -m "Update vendor/package"
+git push
+```
+
+Then deploy as above — the server's `composer install` will pick up the new
+`composer.lock`. If you added a new class under `src/`, regenerate the
+autoloader before committing:
+
+```
+composer dump-autoload
+```
+
+For the FTP-only setup below, "updating" means repeating the whole
+`composer install --no-dev --optimize-autoloader` + upload-`vendor/` process
+described there, since there's no `git pull` on the server to do the update
+in place.
+
+## Deploying (FTP-only shared hosting, no shell access)
+
+Some basic shared-hosting plans only offer FTP and a fixed document root
+(`public_html/` or similar) that can't be repointed at a subfolder like
+`public/`. This app still works there, with two adjustments:
+
+1. **Run `composer install --no-dev --optimize-autoloader` somewhere you do
+   have PHP + Composer** (locally, or a throwaway VM/container) and upload
+   the resulting `vendor/` directory over FTP along with everything else.
+   `vendor/` is gitignored and not part of a plain repo download/zip — it
+   has to be assembled once and shipped as files.
+2. **Upload the whole repo into the fixed document root as-is** (i.e. this
+   `index.php` and `.htaccess` end up at the same level as `public/`,
+   `src/`, `vendor/`, etc.) — do *not* move `public/`'s contents up a
+   level. The root `index.php` and `.htaccess` are a fallback front
+   controller for exactly this case: `.htaccess` serves `/assets/*` out of
+   `public/assets/` and routes every other request through the root
+   `index.php`, which just delegates to `public/index.php`. Everything
+   else (`vendor/`, `src/`, `config/`, `tests/`) stays unreachable from the
+   web — Slim only ever exposes the routes it defines.
+
+This requires `mod_rewrite` to be enabled and `.htaccess` overrides allowed
+(true on virtually all cPanel-style shared hosting). If your host *can*
+set the document root to `public/`, prefer that — it's the setup actually
+exercised above — and you can ignore the root `index.php`/`.htaccess`
+entirely (`public/.htaccess` alone handles routing there).

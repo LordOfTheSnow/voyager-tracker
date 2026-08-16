@@ -1,0 +1,12 @@
+RewriteEngine On
+
+# Only needed when the document root is this directory rather than public/
+# (see README "Deploying" — FTP-only hosts that can't repoint the docroot).
+# Serve the public asset bundle directly...
+RewriteCond %{REQUEST_URI} ^/assets/
+RewriteRule ^assets/(.*)$ public/assets/$1 [L]
+
+# ...and send everything else through the front controller. This also keeps
+# vendor/, src/, config/, tests/ etc. unreachable: Slim only exposes the
+# routes it defines and 404s the rest.
+RewriteRule ^ index.php [L]

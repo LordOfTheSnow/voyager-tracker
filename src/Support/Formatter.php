@@ -11,6 +11,11 @@ final class Formatter
         return number_format($km / 1_000_000_000, 1) . 'B km';
     }
 
+    public static function distanceKmPrecise(float $km): string
+    {
+        return number_format($km, 0) . ' km';
+    }
+
     public static function distanceAu(float $au): string
     {
         return number_format($au, 1) . ' AU';
@@ -19,6 +24,16 @@ final class Formatter
     public static function speedKmS(float $kmPerSecond): string
     {
         return number_format($kmPerSecond, 1) . ' km/s';
+    }
+
+    public static function speedKmH(float $kmPerSecond): string
+    {
+        return number_format($kmPerSecond * 3600, 0) . ' km/h';
+    }
+
+    public static function speedMph(float $kmPerSecond): string
+    {
+        return number_format($kmPerSecond * 3600 / 1.609344, 0) . ' mph';
     }
 
     public static function oneWayLightTime(float $minutes): string

@@ -63,7 +63,7 @@ CDN script tag in `layout.twig`. Alpine's CDN build auto-starts as soon as its o
 it loads first, it starts scanning the DOM before the component registrations exist and every
 `x-data`/`x-show`/`x-text` expression throws `ReferenceError`.
 
-**Known gap:** the SVG position diagrams (home dashboard orrery, per-probe "Position & heading")
-are static schematic illustrations copied from the design handoff — fixed pixel coordinates, not
-derived from live ephemeris data, unlike the numeric stats. Making them real is deferred/planned
-future work (see project memory), not an oversight to silently fix.
+The layout is responsive and has been verified to work cleanly on mobile as well as desktop
+viewports — keep it that way. Any change touching `templates/*.twig` or
+`public/assets/css/app.css` should be checked at a narrow (phone-width) viewport in addition to
+desktop, not just eyeballed at whatever width the browser happens to be.

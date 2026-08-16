@@ -2,6 +2,10 @@
 /var/cache/*.json
 .phpunit.result.cache
 
+# Playwright MCP snapshots/screenshots, in case they ever land here despite
+# the --output-dir override in the playwright MCP server config
+/.playwright-mcp/
+
 # Duplicate of the already-extracted design_handoff_voyager_tracker/ folder
 /Voyager Distance Tracker App.zip
 

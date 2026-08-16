@@ -91,8 +91,12 @@ final class VoyagerDataService
             'instruments' => $config['instruments'],
             'instrumentSummary' => sprintf('%d / %d instruments on', count($activeInstruments), count($config['instruments'])),
             'distanceFromSun' => Formatter::distanceKm($live['distanceFromSunKm']),
+            'distanceFromSunPrecise' => Formatter::distanceKmPrecise($live['distanceFromSunKm']),
             'distanceFromEarth' => Formatter::distanceKm($live['distanceFromEarthKm']),
+            'distanceFromEarthPrecise' => Formatter::distanceKmPrecise($live['distanceFromEarthKm']),
             'speed' => Formatter::speedKmS($live['speedKmS']),
+            'speedKmH' => Formatter::speedKmH($live['speedKmS']),
+            'speedMph' => Formatter::speedMph($live['speedKmS']),
             'oneWayLightTime' => Formatter::oneWayLightTime($live['lightTimeMinutes']),
             'roundTripLightTime' => Formatter::roundTripLightTime($live['lightTimeMinutes']),
             'signalLabel' => $live['inContact']
