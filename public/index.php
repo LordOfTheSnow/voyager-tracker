@@ -21,6 +21,7 @@ $app->addRoutingMiddleware();
 $twig = Twig::create(dirname(__DIR__) . '/templates', [
     'cache' => false,
 ]);
+$twig->getEnvironment()->addGlobal('appVersion', $appConfig['version']);
 $app->add(TwigMiddleware::create($app, $twig));
 
 $dataService = new VoyagerDataService(
@@ -82,10 +83,14 @@ $app->get('/voyager-2', function ($request, $response) use ($dataService, $twig,
     return $twig->render($response, 'detail.twig', ['probe' => $probe, 'active' => 'voyager-2']);
 });
 
-foreach (['milestones' => 'Milestones', 'about' => 'About', 'sources' => 'Sources'] as $slug => $title) {
+foreach (['milestones' => 'Milestones', 'about' => 'About'] as $slug => $title) {
     $app->get("/{$slug}", function ($request, $response) use ($twig, $slug, $title) {
         return $twig->render($response, 'stub.twig', ['title' => $title, 'active' => $slug]);
     });
 }
+
+$app->get('/sources', function ($request, $response) use ($twig) {
+    return $twig->render($response, 'sources.twig', ['active' => 'sources']);
+});
 
 $app->run();

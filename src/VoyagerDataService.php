@@ -14,31 +14,29 @@ final class VoyagerDataService
 {
     private const AU_IN_KM = 149_597_870.7;
 
-    // Home dashboard orrery geometry (pixel coords within each SVG's viewBox).
-    // Probe radii are normalized between V1 and V2's own live distances
-    // rather than to a fixed AU scale, so the layout keeps working as both
-    // probes recede over time without needing recalibration.
-    private const DEFAULT_VIEW_SUN = ['x' => 160.0, 'y' => 30.0];
-    private const DEFAULT_VIEW_EARTH_RADIUS_PX = 26.0;
-    private const DEFAULT_VIEW_PROBE_RADIUS_PX = [220.0, 280.0];
-    private const WIDE_VIEW_SUN = ['x' => 160.0, 'y' => 180.0];
-    // Innermost ring (r=20, see home.twig) stands in for Earth's orbit.
-    private const WIDE_VIEW_EARTH_RADIUS_PX = 20.0;
-    // Pluto's orbit ring is drawn at r=130 (see home.twig); keep both probes
-    // clearly past it, never overlapping the ring itself.
-    private const WIDE_VIEW_PROBE_RADIUS_PX = [140.0, 158.0];
-    // Ring radii for the wide view's outer bodies -- must match the <circle>
-    // elements drawn in home.twig.
-    private const WIDE_VIEW_PLANET_RADIUS_PX = [
-        'jupiter' => 40.0,
-        'saturn' => 62.0,
-        'uranus' => 84.0,
-        'neptune' => 106.0,
-        'pluto' => 130.0,
-    ];
+    // Home dashboard orrery: a single real-scale diagram (Sun, Neptune's
+    // orbital ring, the heliopause ring, and both probes), sized so the
+    // farther-out probe sits at HOME_ORRERY_PROBE_RADIUS_PX from the Sun.
+    // The heliopause ring is a full circle around the Sun -- symmetric by
+    // definition -- but the probes (and their labels) only ever reach out in
+    // whatever direction their real ecliptic longitude happens to be, so a
+    // fixed square canvas wastes space on every side they don't reach. The
+    // canvas is instead sized per-request to tightly wrap the Sun, the
+    // heliopause ring, and both probes' real positions (plus label
+    // clearance) -- see getOrreryLayout(). It stays undistorted (rings
+    // circular, not elliptical) because home.twig's <svg> viewBox and
+    // aspect-ratio always share these exact dimensions, keeping the x/y
+    // pixel-per-unit scale equal.
+    private const HOME_ORRERY_PROBE_RADIUS_PX = 255.0;
+    private const HOME_ORRERY_MARGIN_PX = 24.0;
+    // Rough on-screen footprint of a probe's dot + "V1"/"V2" + AU labels
+    // (see the fixed x+8/y+4/y+17 text offsets in home.twig), so the canvas
+    // reaches far enough to fit the label, not just the bare dot.
+    private const HOME_ORRERY_LABEL_RIGHT_PX = 58.0;
+    private const HOME_ORRERY_LABEL_DOWN_PX = 30.0;
     // spkId is each body's barycenter (steadier ephemeris than the planet
-    // itself). Shared between the wide view (angle only) and the distance
-    // modal (angle + real distance).
+    // itself). Shared between the home orrery (Neptune only) and the
+    // distance modal (every body, angle + real distance).
     private const HELIOCENTRIC_BODIES = [
         'earth' => ['spkId' => '399', 'label' => 'Earth'],
         'jupiter' => ['spkId' => '5', 'label' => 'Jupiter'],
@@ -58,6 +56,12 @@ final class VoyagerDataService
     private const DISTANCE_MODAL_CENTER = ['x' => 450.0, 'y' => 450.0];
     private const DISTANCE_MODAL_LOG_PX_PER_LOG_AU = 170.0;
     private const DISTANCE_MODAL_LINEAR_PX_PER_AU = 4.5;
+    // The heliopause isn't a sphere -- V1 crossed it at ~121 AU (2012), V2 at
+    // ~119 AU (2018), and its true shape is a lopsided "windsock" pushed by
+    // the interstellar medium. This ring is an illustrative average, same
+    // spirit as the static instrument-health table: a labeled approximation,
+    // not a live or precise boundary.
+    private const HELIOPAUSE_DISTANCE_AU = 120.0;
 
     /** @param array<string, array<string, mixed>> $probes */
     public function __construct(
@@ -92,6 +96,7 @@ final class VoyagerDataService
             'instrumentSummary' => sprintf('%d / %d instruments on', count($activeInstruments), count($config['instruments'])),
             'distanceFromSun' => Formatter::distanceKm($live['distanceFromSunKm']),
             'distanceFromSunPrecise' => Formatter::distanceKmPrecise($live['distanceFromSunKm']),
+            'distanceFromSunAu' => Formatter::distanceAu($live['distanceFromSunKm'] / self::AU_IN_KM),
             'distanceFromEarth' => Formatter::distanceKm($live['distanceFromEarthKm']),
             'distanceFromEarthPrecise' => Formatter::distanceKmPrecise($live['distanceFromEarthKm']),
             'speed' => Formatter::speedKmS($live['speedKmS']),
@@ -117,8 +122,11 @@ final class VoyagerDataService
             'slug' => $full['slug'],
             'name' => $full['name'],
             'distanceFromSun' => $full['distanceFromSun'],
+            'distanceFromSunAu' => $full['distanceFromSunAu'],
             'distanceFromEarth' => $full['distanceFromEarth'],
             'speed' => $full['speed'],
+            'speedKmH' => $full['speedKmH'],
+            'speedMph' => $full['speedMph'],
             'oneWayLightTime' => $full['oneWayLightTime'],
             'daysSinceLaunch' => $full['daysSinceLaunch'],
             'location' => $full['location'],
@@ -131,43 +139,57 @@ final class VoyagerDataService
         ];
     }
 
-    /** Real-time layout for the home dashboard's solar-system orrery SVGs. */
+    /**
+     * Real-time, real-scale layout for the home dashboard's solar-system
+     * orrery SVG. The canvas is sized to tightly fit whatever the live data
+     * actually needs (see the class-level comment on the HOME_ORRERY_*
+     * constants) rather than a fixed square, so it carries no built-in
+     * padding on sides nothing reaches into.
+     */
     public function getOrreryLayout(): array
     {
         $v1 = $this->fetchLive($this->probes['voyager-1']);
         $v2 = $this->fetchLive($this->probes['voyager-2']);
-        $earthEclipticLongitudeDeg = $this->getHeliocentricPosition('earth', self::HELIOCENTRIC_BODIES['earth']['spkId'])['eclipticLongitudeDeg'];
+        $neptune = $this->getHeliocentricPosition('neptune', self::HELIOCENTRIC_BODIES['neptune']['spkId']);
+        $neptuneAu = $neptune['distanceFromSunKm'] / self::AU_IN_KM;
 
         $v1Au = $v1['distanceFromSunKm'] / self::AU_IN_KM;
         $v2Au = $v2['distanceFromSunKm'] / self::AU_IN_KM;
-        $minAu = min($v1Au, $v2Au);
-        $maxAu = max($v1Au, $v2Au);
+        $pxPerAu = self::HOME_ORRERY_PROBE_RADIUS_PX / max($v1Au, $v2Au);
+        $heliopauseRadiusPx = self::HELIOPAUSE_DISTANCE_AU * $pxPerAu;
+        $neptuneRadiusPx = $neptuneAu * $pxPerAu;
 
-        $defaultRadiusV1 = Orrery::normalizeRadius($v1Au, $minAu, $maxAu, ...self::DEFAULT_VIEW_PROBE_RADIUS_PX);
-        $defaultRadiusV2 = Orrery::normalizeRadius($v2Au, $minAu, $maxAu, ...self::DEFAULT_VIEW_PROBE_RADIUS_PX);
-        $wideRadiusV1 = Orrery::normalizeRadius($v1Au, $minAu, $maxAu, ...self::WIDE_VIEW_PROBE_RADIUS_PX);
-        $wideRadiusV2 = Orrery::normalizeRadius($v2Au, $minAu, $maxAu, ...self::WIDE_VIEW_PROBE_RADIUS_PX);
+        // Positions relative to the Sun at (0, 0), same convention Orrery::project
+        // always uses (y grows downward, as in SVG).
+        $v1Rel = Orrery::project($v1['eclipticLongitudeDeg'], $v1Au * $pxPerAu, 0.0, 0.0);
+        $v2Rel = Orrery::project($v2['eclipticLongitudeDeg'], $v2Au * $pxPerAu, 0.0, 0.0);
+        $neptuneRel = Orrery::project($neptune['eclipticLongitudeDeg'], $neptuneRadiusPx, 0.0, 0.0);
 
-        $widePlanets = [];
-        foreach (self::WIDE_VIEW_PLANET_RADIUS_PX as $slug => $radiusPx) {
-            $body = self::HELIOCENTRIC_BODIES[$slug];
-            $position = $this->getHeliocentricPosition($slug, $body['spkId']);
-            $widePlanets[$slug] = [
-                ...Orrery::project($position['eclipticLongitudeDeg'], $radiusPx, ...array_values(self::WIDE_VIEW_SUN)),
-                'label' => $body['label'],
-            ];
-        }
+        // The "Heliopause (approx.)" label sits on the ring's upper-right
+        // diagonal (see home.twig) -- its own rough footprint, in addition
+        // to the ring itself, also has to fit inside the canvas.
+        $heliopauseLabelRightPx = $heliopauseRadiusPx * 0.7071 + 94.0;
+        $heliopauseLabelUpPx = $heliopauseRadiusPx * 0.7071;
+
+        $reachRight = max($heliopauseRadiusPx, $heliopauseLabelRightPx, $v1Rel['x'] + self::HOME_ORRERY_LABEL_RIGHT_PX, $v2Rel['x'] + self::HOME_ORRERY_LABEL_RIGHT_PX, $neptuneRel['x'] + self::HOME_ORRERY_LABEL_RIGHT_PX);
+        $reachLeft = max($heliopauseRadiusPx, -$v1Rel['x'], -$v2Rel['x'], -$neptuneRel['x']);
+        $reachDown = max($heliopauseRadiusPx, $v1Rel['y'] + self::HOME_ORRERY_LABEL_DOWN_PX, $v2Rel['y'] + self::HOME_ORRERY_LABEL_DOWN_PX, $neptuneRel['y'] + self::HOME_ORRERY_LABEL_DOWN_PX);
+        $reachUp = max($heliopauseRadiusPx, $heliopauseLabelUpPx, -$v1Rel['y'], -$v2Rel['y'], -$neptuneRel['y']);
+
+        $sun = [
+            'x' => $reachLeft + self::HOME_ORRERY_MARGIN_PX,
+            'y' => $reachUp + self::HOME_ORRERY_MARGIN_PX,
+        ];
 
         return [
-            'sun' => self::DEFAULT_VIEW_SUN,
-            'earth' => Orrery::project($earthEclipticLongitudeDeg, self::DEFAULT_VIEW_EARTH_RADIUS_PX, ...array_values(self::DEFAULT_VIEW_SUN)),
-            'v1' => Orrery::project($v1['eclipticLongitudeDeg'], $defaultRadiusV1, ...array_values(self::DEFAULT_VIEW_SUN)),
-            'v2' => Orrery::project($v2['eclipticLongitudeDeg'], $defaultRadiusV2, ...array_values(self::DEFAULT_VIEW_SUN)),
-            'wideSun' => self::WIDE_VIEW_SUN,
-            'wideEarth' => Orrery::project($earthEclipticLongitudeDeg, self::WIDE_VIEW_EARTH_RADIUS_PX, ...array_values(self::WIDE_VIEW_SUN)),
-            'wideV1' => Orrery::project($v1['eclipticLongitudeDeg'], $wideRadiusV1, ...array_values(self::WIDE_VIEW_SUN)),
-            'wideV2' => Orrery::project($v2['eclipticLongitudeDeg'], $wideRadiusV2, ...array_values(self::WIDE_VIEW_SUN)),
-            'widePlanets' => $widePlanets,
+            'sun' => $sun,
+            'canvasWidth' => $reachLeft + $reachRight + 2 * self::HOME_ORRERY_MARGIN_PX,
+            'canvasHeight' => $reachUp + $reachDown + 2 * self::HOME_ORRERY_MARGIN_PX,
+            'neptuneRadiusPx' => $neptuneRadiusPx,
+            'heliopauseRadiusPx' => $heliopauseRadiusPx,
+            'neptune' => ['x' => $sun['x'] + $neptuneRel['x'], 'y' => $sun['y'] + $neptuneRel['y'], 'distanceLabel' => Formatter::distanceAu($neptuneAu)],
+            'v1' => ['x' => $sun['x'] + $v1Rel['x'], 'y' => $sun['y'] + $v1Rel['y'], 'distanceLabel' => Formatter::distanceAu($v1Au)],
+            'v2' => ['x' => $sun['x'] + $v2Rel['x'], 'y' => $sun['y'] + $v2Rel['y'], 'distanceLabel' => Formatter::distanceAu($v2Au)],
         ];
     }
 
@@ -207,7 +229,14 @@ final class VoyagerDataService
             $linear[$slug] = [...Orrery::project($lon, $linearRadiusPx, ...array_values(self::DISTANCE_MODAL_CENTER)), 'radiusPx' => $linearRadiusPx, ...$point];
         }
 
-        return ['log' => $log, 'linear' => $linear];
+        $heliopause = [
+            'label' => 'Heliopause (approx.)',
+            'distanceLabel' => Formatter::distanceAu(self::HELIOPAUSE_DISTANCE_AU),
+            'logRadiusPx' => Orrery::logRadius(self::HELIOPAUSE_DISTANCE_AU, self::DISTANCE_MODAL_LOG_PX_PER_LOG_AU),
+            'linearRadiusPx' => self::HELIOPAUSE_DISTANCE_AU * self::DISTANCE_MODAL_LINEAR_PX_PER_AU,
+        ];
+
+        return ['log' => $log, 'linear' => $linear, 'heliopause' => $heliopause];
     }
 
     private function getHeliocentricPosition(string $cacheSlug, string $spkId): array

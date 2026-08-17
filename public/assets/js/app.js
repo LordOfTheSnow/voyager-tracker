@@ -1,22 +1,4 @@
 document.addEventListener('alpine:init', () => {
-  Alpine.data('homeOrrery', () => ({
-    zoom: 1,
-    get isZoomOut() {
-      return this.zoom === 0;
-    },
-    get caption() {
-      return this.zoom === 0
-        ? "Zoomed out: full solar system out to Pluto's orbit — both probes have crossed it."
-        : "Default view: Sun, Earth, and each probe's current heading.";
-    },
-    zoomOut() {
-      this.zoom = Math.max(0, this.zoom - 1);
-    },
-    zoomIn() {
-      this.zoom = Math.min(1, this.zoom + 1);
-    },
-  }));
-
   Alpine.data('distanceModal', () => ({
     // Must match VoyagerDataService::DISTANCE_MODAL_CENTER.
     centerX: 450,
@@ -94,16 +76,6 @@ document.addEventListener('alpine:init', () => {
       return this.scaleMode === 'log'
         ? 'Log scale: every body stays visible and correctly ordered by distance, but spacing is not linearly proportional.'
         : 'True linear scale: real proportional distances. Drag to pan, scroll or use +/- to zoom in from the outer solar system toward the Sun.';
-    },
-  }));
-
-  Alpine.data('expandable', () => ({
-    expanded: false,
-    toggle() {
-      this.expanded = !this.expanded;
-    },
-    get label() {
-      return this.expanded ? 'Show less' : 'Show more';
     },
   }));
 });

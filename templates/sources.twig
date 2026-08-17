@@ -1,0 +1,40 @@
+{% extends "layout.twig" %}
+
+{% block title %}Sources — Voyager Distance Tracker{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h6 style="color:var(--color-accent)">SOURCES</h6>
+    <h1>Where this data comes from</h1>
+  </div>
+</div>
+
+<div class="detail-two-col">
+
+  <div class="card elev-sm" style="padding:var(--space-4)">
+    <span class="card-kicker">Live data</span>
+    <span class="card-title"><i class="ph ph-compass"></i> JPL Horizons</span>
+    <p class="card-body">Distance from the Sun, speed, and one-way light time all come from NASA JPL's Horizons System — the same ephemeris service that powers most professional solar-system navigation software. No authentication required. Each probe needs two separate requests, since Horizons only accepts one observing center per call: Sun-centered for distance and speed, Earth-centered for distance and light time.</p>
+    <a href="https://ssd.jpl.nasa.gov/api/horizons.api" target="_blank" rel="noopener" class="btn btn-ghost">ssd.jpl.nasa.gov/api/horizons.api <i class="ph ph-arrow-up-right"></i></a>
+  </div>
+
+  <div class="card elev-sm" style="padding:var(--space-4)">
+    <span class="card-kicker">Live data</span>
+    <span class="card-title"><i class="ph ph-broadcast"></i> DSN Now</span>
+    <p class="card-body">Signal/contact status comes from NASA's official Deep Space Network feed — the same XML data that drives the eyes.nasa.gov DSN visualization. A probe frequently shows "not in contact"; that's real dish-scheduling behavior, not an error state.</p>
+    <a href="https://eyes.nasa.gov/dsn/data/dsn.xml" target="_blank" rel="noopener" class="btn btn-ghost">eyes.nasa.gov/dsn/data/dsn.xml <i class="ph ph-arrow-up-right"></i></a>
+  </div>
+
+</div>
+
+<div class="card elev-sm" style="padding:var(--space-4);margin-bottom:var(--space-6)">
+  <span class="card-kicker">Static &amp; illustrative data</span>
+  <p class="card-body">Launch date, heliopause crossing date, and constellation heading are real facts, but baked into the app rather than fetched live — they don't change often enough to need a live source.</p>
+  <p class="card-body">Instrument health, shown on each probe's detail page, is illustrative wireframe data, not real telemetry — there's no public API that decodes actual Voyager instrument status.</p>
+</div>
+
+<p class="text-muted" style="font-size:12px">Live figures are cached locally and refresh at most once every 15 minutes. If a refresh fails, the last known good values are shown rather than breaking the page.</p>
+
+{% endblock %}

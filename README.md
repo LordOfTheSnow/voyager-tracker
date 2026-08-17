@@ -1,7 +1,41 @@
 # Voyager Distance Tracker
 
+[![Version](https://img.shields.io/badge/version-0.5.0-9184d9)](CHANGELOG.md)
+[![PHP](https://img.shields.io/badge/PHP-8.1%2B-f97316?logo=php&logoColor=white)](https://www.php.net/)
+[![Database](https://img.shields.io/badge/database-none%20%28by%20design%29-4a6fe3)](#architecture)
+[![License](https://img.shields.io/badge/license-MIT-22c55e)](LICENSE)
+
 Live-ish distance/status tracker for Voyager 1 and Voyager 2, built for basic
 shared PHP hosting. No database — see [Architecture](#architecture) below.
+
+Not affiliated with or endorsed by NASA or JPL — just a hobby project built
+on their public data.
+
+![Home dashboard screenshot](docs/screenshot-home.png)
+
+## Features
+
+> **Work in progress:** the app is pre-1.0 (see [CHANGELOG.md](CHANGELOG.md)).
+> The Milestones and About nav links are still placeholder "coming soon" pages.
+
+- Live distance, speed, and light-time for both probes, sourced directly from
+  JPL Horizons on every cache refresh.
+- Live DSN contact/signal status from NASA's official DSN Now feed — a probe
+  showing "not in contact" is expected dish-scheduling behavior, not an error.
+- Home dashboard orrery drawn to true relative scale: Sun, Neptune, the
+  heliopause boundary, and both probes, sized dynamically around whatever the
+  live data actually needs.
+- "Real distances" modal with pan/zoom log-scale and true-linear-scale views
+  of the whole solar system.
+- Per-probe detail pages with precise distances, mission facts, constellation
+  heading, and instrument status (illustrative, not live — see
+  [Architecture](#architecture)).
+- Distances and speeds shown in multiple units (km, AU, km/s, km/h, mph).
+- No database: a lazy, per-probe 15-minute file cache with stale-but-served
+  fallback if a live refresh fails.
+- No build step: Alpine.js via CDN, zero Node/webpack tooling.
+- Deploys to plain SSH + `git pull` hosting or FTP-only shared hosting with no
+  shell access — see [Deploying](#deploying-ssh-no-root-cron-optional-but-not-required).
 
 ## Requirements
 
@@ -34,8 +68,8 @@ composer test     # PHPUnit — fetch/cache/parsing logic only, no network calls
   only appears if there's no cache yet at all (e.g. first request ever).
 - **Backend**: Slim Framework (routing) + Twig (templates — no PHP logic in
   views), autoloaded via Composer/PSR-4 (`App\` → `src/`).
-- **Frontend**: Alpine.js via CDN for the zoom toggle and expand/collapse
-  cards. No Node, no build step.
+- **Frontend**: Alpine.js via CDN for the "real distances" modal's open/close,
+  scale toggle, and pan/zoom. No Node, no build step.
 
 ## Deploying (SSH, no root, cron optional but not required)
 

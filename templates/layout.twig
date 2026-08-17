@@ -12,15 +12,17 @@
 </head>
 <body>
 <div class="page">
-  <nav class="nav">
-    <span class="nav-brand"><i class="ph ph-planet"></i>Voyager Distance Tracker</span>
-    <a href="/" {% if active == 'home' %}aria-current="page"{% endif %}>Home</a>
-    <a href="/voyager-1" {% if active == 'voyager-1' %}aria-current="page"{% endif %}>Voyager 1</a>
-    <a href="/voyager-2" {% if active == 'voyager-2' %}aria-current="page"{% endif %}>Voyager 2</a>
-    <a href="/milestones" {% if active == 'milestones' %}aria-current="page"{% endif %}>Milestones</a>
-    <a href="/about" {% if active == 'about' %}aria-current="page"{% endif %}>About</a>
-    <a href="/sources" {% if active == 'sources' %}aria-current="page"{% endif %}>Sources</a>
-  </nav>
+  <header class="nav-bar">
+    <nav class="nav">
+      <span class="nav-brand"><i class="ph ph-planet"></i>Voyager Distance Tracker<span class="nav-version">v{{ appVersion }}</span></span>
+      <a href="/" {% if active == 'home' %}aria-current="page"{% endif %}>Home</a>
+      <a href="/voyager-1" {% if active == 'voyager-1' %}aria-current="page"{% endif %}>Voyager 1</a>
+      <a href="/voyager-2" {% if active == 'voyager-2' %}aria-current="page"{% endif %}>Voyager 2</a>
+      <a href="/milestones" {% if active == 'milestones' %}aria-current="page"{% endif %}>Milestones</a>
+      <a href="/about" {% if active == 'about' %}aria-current="page"{% endif %}>About</a>
+      <a href="/sources" {% if active == 'sources' %}aria-current="page"{% endif %}>Sources</a>
+    </nav>
+  </header>
 
   <main class="page-main">
     {% block content %}{% endblock %}

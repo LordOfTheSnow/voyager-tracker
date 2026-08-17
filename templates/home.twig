@@ -45,81 +45,70 @@
 
 <div class="home-grid">
 
-  <div class="card elev-sm orrery-card" x-data="homeOrrery">
+  {# x-data is an empty scope, not app state -- Alpine only wires up @click/$dispatch inside
+     an x-data-rooted tree, and this card no longer carries any reactive state of its own. #}
+  <div class="card elev-sm orrery-card" x-data>
     <div class="orrery-card-head">
-      <span class="card-kicker">Position — solar system view</span>
+      <span class="card-kicker">Position — solar system view (real scale)</span>
       <div class="orrery-actions">
-        <button class="btn btn-icon btn-secondary" @click="zoomOut()" aria-label="Zoom out"><i class="ph ph-minus"></i></button>
-        <button class="btn btn-icon btn-secondary" @click="zoomIn()" aria-label="Zoom in"><i class="ph ph-plus"></i></button>
         <button class="btn btn-icon btn-secondary" @click="$dispatch('open-distance-modal')" aria-label="Expand to full real-distance view"><i class="ph ph-arrows-out"></i></button>
       </div>
     </div>
 
-    <svg x-show="isZoomOut" width="100%" height="360" viewBox="0 0 320 360" style="display:block;margin:var(--space-2) 0">
-      <circle cx="{{ orrery.wideSun.x }}" cy="{{ orrery.wideSun.y }}" r="7" fill="var(--color-accent)"></circle>
-      <circle cx="{{ orrery.wideSun.x }}" cy="{{ orrery.wideSun.y }}" r="20" fill="none" stroke="var(--color-divider)"></circle>
-      <circle cx="{{ orrery.wideSun.x }}" cy="{{ orrery.wideSun.y }}" r="40" fill="none" stroke="var(--color-divider)"></circle>
-      <circle cx="{{ orrery.wideSun.x }}" cy="{{ orrery.wideSun.y }}" r="62" fill="none" stroke="var(--color-divider)"></circle>
-      <circle cx="{{ orrery.wideSun.x }}" cy="{{ orrery.wideSun.y }}" r="84" fill="none" stroke="var(--color-divider)"></circle>
-      <circle cx="{{ orrery.wideSun.x }}" cy="{{ orrery.wideSun.y }}" r="106" fill="none" stroke="var(--color-divider)"></circle>
-      <circle cx="{{ orrery.wideSun.x }}" cy="{{ orrery.wideSun.y }}" r="130" fill="none" stroke="var(--color-divider)" stroke-dasharray="2 4"></circle>
-      <text x="122" y="53" font-size="10" fill="var(--color-neutral-500)">Pluto's orbit</text>
-      <circle cx="{{ orrery.wideEarth.x }}" cy="{{ orrery.wideEarth.y }}" r="2.5" fill="#8ec5eb"></circle>
-      {% for planet in orrery.widePlanets %}
-      <circle cx="{{ planet.x }}" cy="{{ planet.y }}" r="2.5" fill="var(--color-neutral-300)"></circle>
-      <text x="{{ planet.x + 6 }}" y="{{ planet.y + 4 }}" font-size="8" fill="var(--color-neutral-500)">{{ planet.label }}</text>
-      {% endfor %}
-      <line x1="{{ orrery.wideSun.x }}" y1="{{ orrery.wideSun.y }}" x2="{{ orrery.wideV1.x }}" y2="{{ orrery.wideV1.y }}" stroke="var(--color-accent-600)" stroke-dasharray="2 4"></line>
-      <circle cx="{{ orrery.wideV1.x }}" cy="{{ orrery.wideV1.y }}" r="4" fill="var(--color-accent)" class="pulse-dot {{ v1.inContact ? '' : 'is-dormant' }}"></circle>
-      <text x="{{ orrery.wideV1.x - 13 }}" y="{{ orrery.wideV1.y - 6 }}" font-size="10" fill="var(--color-text)">V1</text>
-      <line x1="{{ orrery.wideSun.x }}" y1="{{ orrery.wideSun.y }}" x2="{{ orrery.wideV2.x }}" y2="{{ orrery.wideV2.y }}" stroke="var(--color-accent-600)" stroke-dasharray="2 4"></line>
-      <circle cx="{{ orrery.wideV2.x }}" cy="{{ orrery.wideV2.y }}" r="4" fill="var(--color-accent)" class="pulse-dot {{ v2.inContact ? '' : 'is-dormant' }}"></circle>
-      <text x="{{ orrery.wideV2.x - 13 }}" y="{{ orrery.wideV2.y - 5 }}" font-size="10" fill="var(--color-text)">V2</text>
-    </svg>
+    {# Sun, Neptune's orbit, the heliopause, and both probes, drawn to real relative scale --
+       see VoyagerDataService::getOrreryLayout(). The viewBox is sized to tightly fit the live
+       data every request (not a fixed square), so there's no dead margin on sides nothing
+       reaches into; aspect-ratio (rather than a fixed height) matches that same box exactly so
+       the rings render as true circles instead of being stretched into ellipses. #}
+    <svg width="100%" viewBox="0 0 {{ orrery.canvasWidth }} {{ orrery.canvasHeight }}" style="display:block;margin:var(--space-2) 0;aspect-ratio:{{ orrery.canvasWidth }}/{{ orrery.canvasHeight }};height:auto">
+      <circle cx="{{ orrery.sun.x }}" cy="{{ orrery.sun.y }}" r="{{ orrery.neptuneRadiusPx }}" fill="none" stroke="var(--color-divider)"></circle>
+      {# #4a6fe3 is Neptune's characteristic deep azure-blue, distinct from Earth's paler #8ec5eb. #}
+      <circle cx="{{ orrery.neptune.x }}" cy="{{ orrery.neptune.y }}" r="4" fill="#4a6fe3"></circle>
+      <text x="{{ orrery.neptune.x + 8 }}" y="{{ orrery.neptune.y + 4 }}" font-size="11" fill="var(--color-text)">Neptune</text>
+      <text x="{{ orrery.neptune.x + 8 }}" y="{{ orrery.neptune.y + 17 }}" font-size="9" fill="var(--color-neutral-500)">{{ orrery.neptune.distanceLabel }}</text>
 
-    <svg x-show="!isZoomOut" width="100%" height="360" viewBox="0 0 320 360" style="display:block;margin:var(--space-2) 0">
+      <circle cx="{{ orrery.sun.x }}" cy="{{ orrery.sun.y }}" r="{{ orrery.heliopauseRadiusPx }}" fill="none" stroke="var(--color-accent-500)" stroke-width="1.5" stroke-dasharray="6 5"></circle>
+      <text x="{{ orrery.sun.x + orrery.heliopauseRadiusPx * 0.7071 + 4 }}" y="{{ orrery.sun.y - orrery.heliopauseRadiusPx * 0.7071 }}" font-size="10" fill="var(--color-accent-500)">Heliopause (approx.)</text>
+
       <circle cx="{{ orrery.sun.x }}" cy="{{ orrery.sun.y }}" r="8" fill="var(--color-accent)"></circle>
-      <circle cx="{{ orrery.sun.x }}" cy="{{ orrery.sun.y }}" r="26" fill="none" stroke="var(--color-divider)"></circle>
-      <circle cx="{{ orrery.earth.x }}" cy="{{ orrery.earth.y }}" r="3" fill="var(--color-neutral-300)"></circle>
-      <text x="{{ orrery.earth.x + 4 }}" y="{{ orrery.earth.y + 4 }}" font-size="10" fill="var(--color-neutral-500)">Earth</text>
+      <text x="{{ orrery.sun.x }}" y="{{ orrery.sun.y - 14 }}" font-size="11" fill="var(--color-text)" text-anchor="middle">Sun</text>
+
       <line x1="{{ orrery.sun.x }}" y1="{{ orrery.sun.y }}" x2="{{ orrery.v1.x }}" y2="{{ orrery.v1.y }}" stroke="var(--color-accent-600)" stroke-dasharray="2 4"></line>
       <circle cx="{{ orrery.v1.x }}" cy="{{ orrery.v1.y }}" r="4" fill="var(--color-accent)" class="pulse-dot {{ v1.inContact ? '' : 'is-dormant' }}"></circle>
-      <text x="{{ orrery.v1.x + 6 }}" y="{{ orrery.v1.y + 4 }}" font-size="11" fill="var(--color-text)">V1</text>
+      <text x="{{ orrery.v1.x + 8 }}" y="{{ orrery.v1.y + 4 }}" font-size="11" fill="var(--color-text)">V1</text>
+      <text x="{{ orrery.v1.x + 8 }}" y="{{ orrery.v1.y + 17 }}" font-size="9" fill="var(--color-neutral-500)">{{ orrery.v1.distanceLabel }}</text>
+
       <line x1="{{ orrery.sun.x }}" y1="{{ orrery.sun.y }}" x2="{{ orrery.v2.x }}" y2="{{ orrery.v2.y }}" stroke="var(--color-accent-600)" stroke-dasharray="2 4"></line>
       <circle cx="{{ orrery.v2.x }}" cy="{{ orrery.v2.y }}" r="4" fill="var(--color-accent)" class="pulse-dot {{ v2.inContact ? '' : 'is-dormant' }}"></circle>
-      <text x="{{ orrery.v2.x + 6 }}" y="{{ orrery.v2.y + 4 }}" font-size="11" fill="var(--color-text)">V2</text>
+      <text x="{{ orrery.v2.x + 8 }}" y="{{ orrery.v2.y + 4 }}" font-size="11" fill="var(--color-text)">V2</text>
+      <text x="{{ orrery.v2.x + 8 }}" y="{{ orrery.v2.y + 17 }}" font-size="9" fill="var(--color-neutral-500)">{{ orrery.v2.distanceLabel }}</text>
     </svg>
 
-    <p class="card-body" style="opacity:.6;font-size:12px" x-text="caption"></p>
+    <p class="card-body" style="opacity:.6;font-size:12px">Sun, Neptune, and the heliopause, drawn to real relative scale — both probes are already well past it.</p>
   </div>
 
   <div class="probe-stack">
 
     {% for v in [v1, v2] %}
-    <div class="card elev-sm probe-card" x-data="expandable">
+    <div class="card elev-sm probe-card">
       <div class="probe-card-head">
         <span class="card-title">{{ v.name }}</span>
         <span class="tag {{ v.inContact ? 'tag-accent' : 'tag-neutral' }}"><i class="ph ph-broadcast"></i>{{ v.signalLabel }}</span>
       </div>
       <div class="stat-grid-3">
-        <div><div class="text-muted stat-label">Dist. from Sun</div><div class="stat-value">{{ v.distanceFromSun }}</div></div>
-        <div><div class="text-muted stat-label">Speed</div><div class="stat-value">{{ v.speed }}</div></div>
+        <div><div class="text-muted stat-label">Distance from Sun</div><div class="stat-value">{{ v.distanceFromSun }}</div><div class="text-muted stat-sub">{{ v.distanceFromSunAu }}</div></div>
+        <div><div class="text-muted stat-label">Speed</div><div class="stat-value">{{ v.speed }}</div><div class="text-muted stat-sub">{{ v.speedKmH }} &middot; {{ v.speedMph }}</div></div>
         <div><div class="text-muted stat-label">Light time</div><div class="stat-value">{{ v.oneWayLightTime }}</div></div>
       </div>
-      <div x-show="expanded">
-        <div class="hr"></div>
-        <div class="stat-grid-3">
-          <div><div class="text-muted stat-label">Dist. from Earth</div><div class="stat-value-sm">{{ v.distanceFromEarth }}</div></div>
-          <div><div class="text-muted stat-label">Days since launch</div><div class="stat-value-sm">{{ v.daysSinceLaunch }}</div></div>
-          <div><div class="text-muted stat-label">Location</div><div class="stat-value-sm">{{ v.location }}</div></div>
-          <div><div class="text-muted stat-label">Mission health</div><div class="stat-value-sm">{{ v.instrumentSummary }}</div></div>
-          <div><div class="text-muted stat-label">Constellation</div><div class="stat-value-sm">{{ v.constellation }}</div></div>
-          <div style="display:flex;align-items:center"><a href="/{{ v.slug }}" class="btn btn-ghost">Full detail page <i class="ph ph-arrow-right"></i></a></div>
-        </div>
+      <div class="hr"></div>
+      <div class="stat-grid-3">
+        <div><div class="text-muted stat-label">Distance from Earth</div><div class="stat-value-sm">{{ v.distanceFromEarth }}</div></div>
+        <div><div class="text-muted stat-label">Days since launch</div><div class="stat-value-sm">{{ v.daysSinceLaunch }}</div></div>
+        <div><div class="text-muted stat-label">Location</div><div class="stat-value-sm">{{ v.location }}</div></div>
+        <div><div class="text-muted stat-label">Mission health</div><div class="stat-value-sm">{{ v.instrumentSummary }}</div></div>
+        <div><div class="text-muted stat-label">Constellation</div><div class="stat-value-sm">{{ v.constellation }}</div></div>
+        <div style="display:flex;align-items:center"><a href="/{{ v.slug }}" class="btn btn-ghost">Full detail page <i class="ph ph-arrow-right"></i></a></div>
       </div>
-      <button class="btn btn-secondary" style="align-self:flex-start" @click="toggle()">
-        <span x-text="label"></span> <i :class="expanded ? 'ph ph-caret-up' : 'ph ph-caret-down'"></i>
-      </button>
     </div>
     {% endfor %}
 
@@ -150,6 +139,18 @@
          @touchstart="startDrag($event)" @touchmove.prevent="drag($event)" @touchend="endDrag()">
       <g :transform="transform">
         <g x-show="scaleMode === 'log'">
+          {# Illustrative boundary ring, not a body -- see HELIOPAUSE_DISTANCE_AU.
+             vector-effect keeps its stroke/dash a constant on-screen size, unlike the plain
+             body-orbit rings, so it doesn't fade to near-nothing when zoomed out on the linear
+             scale (where its true radius is much larger than the visible canvas). #}
+          <circle cx="450" cy="450" r="{{ distanceModal.heliopause.logRadiusPx }}" fill="none" stroke="var(--color-accent-500)" stroke-width="1.5" stroke-dasharray="6 5" vector-effect="non-scaling-stroke"></circle>
+          {# Label sits on the ring's upper-right diagonal (not straight right/up) so it stays
+             inside the 0-900 viewBox even at the linear scale's much larger radius. #}
+          <g transform="translate({{ 450 + distanceModal.heliopause.logRadiusPx * 0.7071 }}, {{ 450 - distanceModal.heliopause.logRadiusPx * 0.7071 }})">
+            <g :transform="'scale(' + (1 / zoom) + ')'">
+              <text x="6" y="-6" font-size="10" fill="var(--color-accent-500)">{{ distanceModal.heliopause.label }} &middot; {{ distanceModal.heliopause.distanceLabel }}</text>
+            </g>
+          </g>
           <line x1="{{ distanceModal.log.sun.x }}" y1="{{ distanceModal.log.sun.y }}" x2="{{ distanceModal.log.v1.x }}" y2="{{ distanceModal.log.v1.y }}" stroke="var(--color-accent-600)" stroke-width="2" stroke-dasharray="2 4" vector-effect="non-scaling-stroke"></line>
           <line x1="{{ distanceModal.log.sun.x }}" y1="{{ distanceModal.log.sun.y }}" x2="{{ distanceModal.log.v2.x }}" y2="{{ distanceModal.log.v2.y }}" stroke="var(--color-accent-600)" stroke-width="2" stroke-dasharray="2 4" vector-effect="non-scaling-stroke"></line>
           {% for slug, body in distanceModal.log %}
@@ -159,6 +160,14 @@
         <g x-show="scaleMode === 'linear'">
           {# Real linear scale puts Earth just ~4.5px from the Sun's center (1 AU * 4.5px/AU) -- a
              decorative Sun any bigger than that would visually swallow it, so keep this one tiny. #}
+          {# Illustrative boundary ring, not a body -- see HELIOPAUSE_DISTANCE_AU. Same
+             non-scaling treatment as the log-scale ring above, for the same reason. #}
+          <circle cx="450" cy="450" r="{{ distanceModal.heliopause.linearRadiusPx }}" fill="none" stroke="var(--color-accent-500)" stroke-width="1.5" stroke-dasharray="6 5" vector-effect="non-scaling-stroke"></circle>
+          <g transform="translate({{ 450 + distanceModal.heliopause.linearRadiusPx * 0.7071 }}, {{ 450 - distanceModal.heliopause.linearRadiusPx * 0.7071 }})">
+            <g :transform="'scale(' + (1 / zoom) + ')'">
+              <text x="6" y="-6" font-size="10" fill="var(--color-accent-500)">{{ distanceModal.heliopause.label }} &middot; {{ distanceModal.heliopause.distanceLabel }}</text>
+            </g>
+          </g>
           <line x1="{{ distanceModal.linear.sun.x }}" y1="{{ distanceModal.linear.sun.y }}" x2="{{ distanceModal.linear.v1.x }}" y2="{{ distanceModal.linear.v1.y }}" stroke="var(--color-accent-600)" stroke-width="2" stroke-dasharray="2 4" vector-effect="non-scaling-stroke"></line>
           <line x1="{{ distanceModal.linear.sun.x }}" y1="{{ distanceModal.linear.sun.y }}" x2="{{ distanceModal.linear.v2.x }}" y2="{{ distanceModal.linear.v2.y }}" stroke="var(--color-accent-600)" stroke-width="2" stroke-dasharray="2 4" vector-effect="non-scaling-stroke"></line>
           {% for slug, body in distanceModal.linear %}
