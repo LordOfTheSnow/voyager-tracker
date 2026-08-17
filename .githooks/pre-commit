@@ -1,0 +1,13 @@
+#!/bin/sh
+# Keeps composer.lock's content-hash in sync with composer.json so
+# `composer install` on the server never warns about a stale lock file
+# (see the "Refresh composer.lock content-hash..." commits in git log for
+# why this kept recurring). Only runs -- and only touches composer.lock --
+# when composer.json is part of the commit being made.
+set -e
+
+if git diff --cached --name-only | grep -q '^composer\.json$'; then
+    echo "composer.json changed -- refreshing composer.lock's content-hash..."
+    composer update --lock --no-interaction
+    git add composer.lock
+fi
