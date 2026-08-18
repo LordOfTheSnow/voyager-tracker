@@ -7,7 +7,9 @@ namespace App;
 use App\Cache\FileCache;
 use App\DataSource\DsnClient;
 use App\DataSource\HorizonsClient;
+use App\Support\DsnStation;
 use App\Support\Formatter;
+use App\Support\LightDayProjection;
 use App\Support\Orrery;
 
 final class VoyagerDataService
@@ -63,6 +65,37 @@ final class VoyagerDataService
     // not a live or precise boundary.
     private const HELIOPAUSE_DISTANCE_AU = 120.0;
 
+    // Per-probe "angle against the ecliptic" diagram (detail.twig's
+    // Position & Heading card): an edge-on view -- the ecliptic plane drawn
+    // as a horizontal line, the probe's trajectory as a straight ray from
+    // the Sun at its real ecliptic latitude (Orrery::project's angle/radius
+    // transform works unchanged here; latitude-from-horizontal is the same
+    // math as longitude-from-a-reference-direction). Distance along the ray
+    // is schematic, same spirit as the rest of this diagram always had --
+    // only the angle is real, and it barely drifts year to year since both
+    // Voyagers are now moving essentially radially outward.
+    private const ECLIPTIC_DIAGRAM_SUN = ['x' => 55.0, 'y' => 130.0];
+    private const ECLIPTIC_DIAGRAM_PLANE_END_X = 370.0;
+    private const ECLIPTIC_DIAGRAM_PROBE_RADIUS_PX = 150.0;
+    private const ECLIPTIC_DIAGRAM_ARC_RADIUS_PX = 42.0;
+    // Sits strictly between the Sun and the probe dot (both probes are
+    // schematically the same distance out, see above) so it reads as "the
+    // boundary this probe already crossed" without claiming an exact
+    // to-scale distance -- same illustrative-average spirit as
+    // HELIOPAUSE_DISTANCE_AU above, just drawn as the right-side half of it
+    // (the diagram has nothing to the left of the Sun to draw the other
+    // half against).
+    private const ECLIPTIC_DIAGRAM_HELIOPAUSE_RADIUS_PX = 95.0;
+
+    // Light-day crossing projection (see LightDayProjection): a wide-span,
+    // coarse-step future ephemeris scan, cached far longer than everything
+    // else in this class since the answer barely shifts day to day.
+    // 20 years / 10-day steps comfortably covers both probes' crossings
+    // (V2's is the slower of the two) in one ~700-row Horizons request.
+    private const LIGHT_DAY_SERIES_SPAN_DAYS = 20 * 365;
+    private const LIGHT_DAY_SERIES_STEP = '10d';
+    private const LIGHT_DAY_SERIES_CACHE_TTL_SECONDS = 24 * 60 * 60;
+
     /** @param array<string, array<string, mixed>> $probes */
     public function __construct(
         private readonly HorizonsClient $horizons,
@@ -77,8 +110,26 @@ final class VoyagerDataService
     {
         $config = $this->probes[$slug] ?? throw new \InvalidArgumentException("Unknown probe: {$slug}");
         $live = $this->fetchLive($config);
+        $station = $live['inContact'] ? DsnStation::locate($live['dishName']) : null;
+        $directionLabel = match ($live['direction']) {
+            'down' => 'Downlink',
+            'up' => 'Uplink',
+            default => null,
+        };
 
         $activeInstruments = array_filter($config['instruments'], fn (array $i) => $i['active']);
+
+        $lightDayCrossing = LightDayProjection::findCrossing(
+            $this->getLightDayCrossingSeries($config['spkId']),
+            $live['lightTimeMinutes'],
+        );
+        $lightDayCrossingLabel = null;
+        $lightDayCrossingShortLabel = null;
+        if ($lightDayCrossing !== null) {
+            $unit = $lightDayCrossing['targetLightDays'] === 1 ? 'light day' : 'light days';
+            $lightDayCrossingLabel = "Reaches {$lightDayCrossing['targetLightDays']} {$unit}: " . Formatter::dateTimeUtc($lightDayCrossing['date']);
+            $lightDayCrossingShortLabel = "{$lightDayCrossing['targetLightDays']} ld: " . Formatter::dateOnly($lightDayCrossing['date']);
+        }
 
         return [
             'slug' => $config['slug'],
@@ -104,13 +155,79 @@ final class VoyagerDataService
             'speedMph' => Formatter::speedMph($live['speedKmS']),
             'oneWayLightTime' => Formatter::oneWayLightTime($live['lightTimeMinutes']),
             'roundTripLightTime' => Formatter::roundTripLightTime($live['lightTimeMinutes']),
+            'lightDayCrossingLabel' => $lightDayCrossingLabel,
+            'lightDayCrossingShortLabel' => $lightDayCrossingShortLabel,
             'signalLabel' => $live['inContact']
                 ? "signal active \u{b7} DSN {$config['dishSize']} dish"
                 : 'not currently in contact',
             'inContact' => $live['inContact'],
+            'dishFlag' => $station['flag'] ?? null,
+            'dishLocation' => $station['location'] ?? null,
+            'dsnDishName' => $live['dishName'],
+            'dsnDirectionLabel' => $directionLabel,
+            'dsnSignalType' => $live['signalType'] !== null ? ucfirst($live['signalType']) : null,
+            'dsnBand' => $live['band'] !== null ? "{$live['band']}-band" : null,
+            'dsnDataRateLabel' => $live['dataRateBps'] !== null ? Formatter::dataRate($live['dataRateBps']) : null,
+            'dsnDataRateContext' => $live['dataRateBps'] !== null ? Formatter::dataRateContext($live['dataRateBps']) : null,
+            'dsnPowerLabel' => ($live['power'] !== null && $live['direction'] !== null)
+                ? Formatter::signalPower($live['power'], $live['direction'])
+                : null,
+            'dsnPowerContext' => ($live['power'] !== null && $live['direction'] !== null)
+                ? Formatter::signalPowerContext($live['power'], $live['direction'])
+                : null,
+            'eclipticDiagram' => $this->getEclipticDiagram($live['eclipticLatitudeDeg'], $live['inContact']),
             'updatedLabel' => Formatter::relativeTimeAgo($live['fetchedAt']),
             'stale' => $live['stale'],
         ];
+    }
+
+    private function getEclipticDiagram(float $latitudeDeg, bool $inContact): array
+    {
+        $sun = self::ECLIPTIC_DIAGRAM_SUN;
+        $probe = Orrery::project($latitudeDeg, self::ECLIPTIC_DIAGRAM_PROBE_RADIUS_PX, $sun['x'], $sun['y']);
+        $arcLabel = Orrery::project($latitudeDeg / 2, self::ECLIPTIC_DIAGRAM_ARC_RADIUS_PX + 16.0, $sun['x'], $sun['y']);
+
+        return [
+            'sun' => $sun,
+            'planeEndX' => self::ECLIPTIC_DIAGRAM_PLANE_END_X,
+            'probe' => $probe,
+            'probeLabelY' => $probe['y'] + ($latitudeDeg >= 0 ? -15.0 : 24.0),
+            'arcStart' => Orrery::project(0.0, self::ECLIPTIC_DIAGRAM_ARC_RADIUS_PX, $sun['x'], $sun['y']),
+            'arcEnd' => Orrery::project($latitudeDeg, self::ECLIPTIC_DIAGRAM_ARC_RADIUS_PX, $sun['x'], $sun['y']),
+            'arcRadius' => self::ECLIPTIC_DIAGRAM_ARC_RADIUS_PX,
+            'arcSweepFlag' => $latitudeDeg >= 0 ? 0 : 1,
+            'arcLabel' => $arcLabel,
+            'angleLabel' => number_format(abs($latitudeDeg), 1) . "\u{b0}",
+            'directionWord' => $latitudeDeg >= 0 ? 'above' : 'below',
+            'heliopauseTop' => Orrery::project(90.0, self::ECLIPTIC_DIAGRAM_HELIOPAUSE_RADIUS_PX, $sun['x'], $sun['y']),
+            'heliopauseBottom' => Orrery::project(-90.0, self::ECLIPTIC_DIAGRAM_HELIOPAUSE_RADIUS_PX, $sun['x'], $sun['y']),
+            'heliopauseRadius' => self::ECLIPTIC_DIAGRAM_HELIOPAUSE_RADIUS_PX,
+            'heliopauseLabelX' => $sun['x'] + self::ECLIPTIC_DIAGRAM_HELIOPAUSE_RADIUS_PX + 6.0,
+            'inContact' => $inContact,
+        ];
+    }
+
+    /**
+     * Best-effort: this is supplementary/illustrative information, not core
+     * data, so a Horizons failure here (including the very first request,
+     * before there's any stale cache to fall back on -- FileCache rethrows
+     * in that case) must not break the rest of the page.
+     *
+     * @return list<array{date: int, lightTimeMinutes: float}>
+     */
+    private function getLightDayCrossingSeries(string $spkId): array
+    {
+        try {
+            $cached = $this->cache->remember(
+                "lightday-series-{$spkId}",
+                fn () => ['series' => $this->horizons->fetchEarthLightTimeSeries($spkId, self::LIGHT_DAY_SERIES_SPAN_DAYS, self::LIGHT_DAY_SERIES_STEP)],
+                self::LIGHT_DAY_SERIES_CACHE_TTL_SECONDS,
+            );
+
+            return $cached['series'];
+        } catch (\Throwable) {
+            return [];
+        }
     }
 
     /** Lighter view model for each probe card on the home dashboard. */
@@ -128,12 +245,15 @@ final class VoyagerDataService
             'speedKmH' => $full['speedKmH'],
             'speedMph' => $full['speedMph'],
             'oneWayLightTime' => $full['oneWayLightTime'],
+            'lightDayCrossingShortLabel' => $full['lightDayCrossingShortLabel'],
             'daysSinceLaunch' => $full['daysSinceLaunch'],
             'location' => $full['location'],
             'constellation' => $full['constellation'],
             'instrumentSummary' => $full['instrumentSummary'],
             'signalLabel' => $full['inContact'] ? 'signal active' : 'not in contact',
             'inContact' => $full['inContact'],
+            'dishFlag' => $full['dishFlag'],
+            'dishLocation' => $full['dishLocation'],
             'updatedLabel' => $full['updatedLabel'],
             'stale' => $full['stale'],
         ];
@@ -256,10 +376,16 @@ final class VoyagerDataService
                 'distanceFromSunKm' => $sun['distanceFromSunKm'],
                 'speedKmS' => $sun['speedKmS'],
                 'eclipticLongitudeDeg' => $sun['eclipticLongitudeDeg'],
+                'eclipticLatitudeDeg' => $sun['eclipticLatitudeDeg'],
                 'distanceFromEarthKm' => $earth['distanceFromEarthKm'],
                 'lightTimeMinutes' => $earth['lightTimeMinutes'],
                 'inContact' => $signal['inContact'],
                 'dishName' => $signal['dishName'],
+                'direction' => $signal['direction'],
+                'signalType' => $signal['signalType'],
+                'dataRateBps' => $signal['dataRateBps'],
+                'band' => $signal['band'],
+                'power' => $signal['power'],
             ];
         });
     }

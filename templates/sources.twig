@@ -30,9 +30,15 @@
 </div>
 
 <div class="card elev-sm" style="padding:var(--space-4);margin-bottom:var(--space-6)">
-  <span class="card-kicker">Static &amp; illustrative data</span>
+  <span class="card-kicker">Periodically updated</span>
+  <span class="card-title"><i class="ph ph-heartbeat"></i> Instrument status</span>
+  <p class="card-body">There's no public API that decodes actual Voyager telemetry to instrument-level status, so each probe's Instrument Health table is transcribed by hand from NASA's own status page rather than fetched live. Updated here whenever NASA's page changes.</p>
+  <a href="https://science.nasa.gov/mission/voyager/where-are-voyager-1-and-voyager-2-now/" target="_blank" rel="noopener" class="btn btn-ghost">science.nasa.gov &mdash; Where are Voyager 1 and 2 now? <i class="ph ph-arrow-up-right"></i></a>
+</div>
+
+<div class="card elev-sm" style="padding:var(--space-4);margin-bottom:var(--space-6)">
+  <span class="card-kicker">Static data</span>
   <p class="card-body">Launch date, heliopause crossing date, and constellation heading are real facts, but baked into the app rather than fetched live — they don't change often enough to need a live source.</p>
-  <p class="card-body">Instrument health, shown on each probe's detail page, is illustrative wireframe data, not real telemetry — there's no public API that decodes actual Voyager instrument status.</p>
 </div>
 
 <p class="text-muted" style="font-size:12px">Live figures are cached locally and refresh at most once every 15 minutes. If a refresh fails, the last known good values are shown rather than breaking the page.</p>

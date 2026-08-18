@@ -6,6 +6,14 @@ namespace App\Support;
 
 final class Formatter
 {
+    // Reference points for the DSN link card's "in human terms" comparisons.
+    // All illustrative, same spirit as the app's other labeled approximations
+    // (heliopause ring, instrument health): real fixed benchmarks, not live
+    // data, chosen because they're widely recognizable.
+    private const DIALUP_MODEM_BPS = 56_000.0;
+    private const WIFI_REFERENCE_DBM = -50.0; // a solid few-bars home WiFi signal
+    private const MICROWAVE_OVEN_KW = 1.1;
+
     public static function distanceKm(float $km): string
     {
         return number_format($km / 1_000_000_000, 1) . 'B km';
@@ -68,6 +76,86 @@ final class Formatter
     public static function daysSinceFormatted(string $isoDate): string
     {
         return number_format(self::daysSince($isoDate));
+    }
+
+    public static function dataRate(float $bps): string
+    {
+        if ($bps >= 1_000_000) {
+            return number_format($bps / 1_000_000, 2) . ' Mbps';
+        }
+        if ($bps >= 1_000) {
+            return number_format($bps / 1_000, 1) . ' kbps';
+        }
+
+        return number_format($bps, 0) . ' bps';
+    }
+
+    /** @param 'up'|'down' $direction */
+    public static function signalPower(float $value, string $direction): string
+    {
+        return $direction === 'up'
+            ? number_format($value, 1) . ' kW'
+            : number_format($value, 0) . ' dBm';
+    }
+
+    public static function dataRateContext(float $bps): string
+    {
+        if ($bps <= 0.0) {
+            return "carrier only \u{2014} no data currently modulated";
+        }
+        if ($bps < self::DIALUP_MODEM_BPS) {
+            return self::ratioMagnitude(self::DIALUP_MODEM_BPS / $bps) . ' times slower than a 56k dial-up modem';
+        }
+
+        return self::ratioMagnitude($bps / self::DIALUP_MODEM_BPS) . ' times faster than a 56k dial-up modem';
+    }
+
+    /** @param 'up'|'down' $direction */
+    public static function signalPowerContext(float $value, string $direction): string
+    {
+        if ($direction === 'up') {
+            return $value >= self::MICROWAVE_OVEN_KW
+                ? self::ratioMagnitude($value / self::MICROWAVE_OVEN_KW) . ' times the draw of a microwave oven'
+                : 'less power than a microwave oven';
+        }
+
+        $decibelsBelowWifi = self::WIFI_REFERENCE_DBM - $value;
+        if ($decibelsBelowWifi <= 0.0) {
+            return 'as strong as a typical WiFi signal';
+        }
+
+        return self::ratioMagnitude(10 ** ($decibelsBelowWifi / 10)) . ' times fainter than a typical WiFi signal (-50 dBm)';
+    }
+
+    /** Renders a ratio like 100_000_000_000.0 as "100 billion" rather than a wall of digits. */
+    private static function ratioMagnitude(float $ratio): string
+    {
+        $units = [
+            [1_000_000_000_000.0, 'trillion'],
+            [1_000_000_000.0, 'billion'],
+            [1_000_000.0, 'million'],
+            [1_000.0, 'thousand'],
+        ];
+
+        foreach ($units as [$threshold, $label]) {
+            if ($ratio >= $threshold) {
+                $scaled = $ratio / $threshold;
+
+                return number_format($scaled, $scaled >= 100 ? 0 : 1) . ' ' . $label;
+            }
+        }
+
+        return number_format($ratio, $ratio >= 10 ? 0 : 1);
+    }
+
+    public static function dateTimeUtc(\DateTimeImmutable $date): string
+    {
+        return $date->format('M j, Y, H:i') . ' UTC';
+    }
+
+    public static function dateOnly(\DateTimeImmutable $date): string
+    {
+        return $date->format('M j, Y');
     }
 
     public static function relativeTimeAgo(int $timestamp): string

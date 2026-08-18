@@ -12,7 +12,7 @@
     <h1 style="margin:0 0 4px">{{ probe.name }}</h1>
     <p class="text-muted" style="margin:0;font-size:13px">Launched {{ probe.launchDateLabel }} &middot; {{ probe.subtitleFact }}</p>
   </div>
-  <span class="tag {{ probe.inContact ? 'tag-accent' : 'tag-neutral' }}" style="font-size:12px"><i class="ph ph-broadcast"></i>{{ probe.signalLabel }}</span>
+  <span class="tag {{ probe.inContact ? 'tag-accent' : 'tag-neutral' }}" style="font-size:12px"><i class="ph ph-broadcast"></i>{{ probe.signalLabel }}{% if probe.dishFlag %} <span title="{{ probe.dishLocation }}">{{ probe.dishFlag }}</span>{% endif %}</span>
 </div>
 
 <div class="detail-stats">
@@ -23,24 +23,36 @@
     <div class="detail-stat-value">{{ probe.speed }}</div>
     <div class="text-muted detail-stat-sub">{{ probe.speedKmH }} &middot; {{ probe.speedMph }}</div>
   </div>
-  <div class="card elev-sm"><span class="card-kicker">One-way light time</span><div class="detail-stat-value">{{ probe.oneWayLightTime }}</div></div>
+  <div class="card elev-sm">
+    <span class="card-kicker">One-way light time</span>
+    <div class="detail-stat-value">{{ probe.oneWayLightTime }}</div>
+    {% if probe.lightDayCrossingLabel %}<div class="text-muted detail-stat-sub" style="cursor:help" title="Uses Horizons' light-time-corrected one-way light time — the true travel time of the light arriving right now. Other trackers using the probe's instantaneous (not light-time-corrected) distance can land up to ~16 hours earlier for the same crossing.">{{ probe.lightDayCrossingLabel }}</div>{% endif %}
+  </div>
 </div>
 
 <div class="detail-two-col">
 
   <div class="card elev-sm" style="padding:var(--space-4)">
-    <span class="card-kicker">Position &amp; heading</span>
-    <svg width="100%" height="220" viewBox="0 0 400 220" style="display:block;margin:var(--space-2) 0">
-      <circle cx="20" cy="110" r="9" fill="var(--color-accent)"/>
-      <text x="8" y="135" font-size="10" fill="var(--color-neutral-500)">Sun</text>
-      <circle cx="70" cy="110" r="3" fill="var(--color-neutral-300)"/>
-      <text x="60" y="128" font-size="9" fill="var(--color-neutral-500)">Earth</text>
-      <line x1="20" y1="110" x2="380" y2="110" stroke="var(--color-divider)" stroke-dasharray="2 5"/>
-      <circle cx="380" cy="110" r="5" fill="var(--color-accent)" class="pulse-dot {{ probe.inContact ? '' : 'is-dormant' }}"/>
-      <text x="330" y="95" font-size="12" fill="var(--color-text)">{{ probe.name }}</text>
-      <text x="310" y="145" font-size="10" fill="var(--color-neutral-500)">{{ probe.distanceFromSun }} from Sun</text>
+    <span class="card-kicker">Angle against the ecliptic</span>
+    {% set d = probe.eclipticDiagram %}
+    <svg width="100%" height="260" viewBox="0 0 400 260" style="display:block;margin:var(--space-2) 0">
+      <path d="M {{ d.heliopauseTop.x }} {{ d.heliopauseTop.y }} A {{ d.heliopauseRadius }} {{ d.heliopauseRadius }} 0 0 1 {{ d.heliopauseBottom.x }} {{ d.heliopauseBottom.y }}" fill="none" stroke="var(--color-sun)" stroke-width="1.5" stroke-dasharray="6 5" opacity=".8"/>
+      <text x="{{ d.heliopauseLabelX }}" y="{{ d.sun.y - 8 }}" font-size="9" fill="var(--color-sun)" opacity=".9">Heliopause (approx.)</text>
+
+      <line x1="{{ d.sun.x }}" y1="{{ d.sun.y }}" x2="{{ d.planeEndX }}" y2="{{ d.sun.y }}" stroke="var(--color-neutral-600)" stroke-width="1"/>
+      <text x="{{ d.planeEndX - 88 }}" y="{{ d.sun.y + 16 }}" font-size="9" fill="var(--color-neutral-500)">Ecliptic plane</text>
+
+      <line x1="{{ d.sun.x }}" y1="{{ d.sun.y }}" x2="{{ d.probe.x }}" y2="{{ d.probe.y }}" stroke="var(--color-accent-2)" stroke-width="2" stroke-dasharray="1 5" stroke-linecap="round"/>
+      <path d="M {{ d.arcStart.x }} {{ d.arcStart.y }} A {{ d.arcRadius }} {{ d.arcRadius }} 0 0 {{ d.arcSweepFlag }} {{ d.arcEnd.x }} {{ d.arcEnd.y }}" fill="none" stroke="var(--color-accent)" stroke-width="1" opacity=".7"/>
+      <text x="{{ d.arcLabel.x }}" y="{{ d.arcLabel.y }}" font-size="11" fill="var(--color-accent)" text-anchor="middle">{{ d.angleLabel }}</text>
+
+      <circle cx="{{ d.sun.x }}" cy="{{ d.sun.y }}" r="9" fill="var(--color-accent)"/>
+      <text x="{{ d.sun.x - 12 }}" y="{{ d.sun.y + 25 }}" font-size="10" fill="var(--color-neutral-500)">Sun</text>
+
+      <circle cx="{{ d.probe.x }}" cy="{{ d.probe.y }}" r="5" fill="var(--color-accent)" class="pulse-dot {{ probe.inContact ? '' : 'is-dormant' }}"/>
+      <text x="{{ d.probe.x - 45 }}" y="{{ d.probeLabelY }}" font-size="12" fill="var(--color-text)">{{ probe.name }}</text>
     </svg>
-    <p class="card-body" style="opacity:.75">Heading {{ probe.heading }}. Left the heliopause on {{ probe.heliopauseCrossingLabel }} and is now in interstellar space.</p>
+    <p class="card-body" style="opacity:.75">Heading {{ probe.heading }}, currently about {{ d.angleLabel }} {{ d.directionWord }} the ecliptic plane &mdash; a nearly constant angle, since both Voyagers are now moving essentially radially outward from the Sun. Left the heliopause on {{ probe.heliopauseCrossingLabel }} and is now in interstellar space.</p>
   </div>
 
   <div class="card elev-sm" style="padding:var(--space-4)">
@@ -56,6 +68,24 @@
       </tbody>
     </table>
   </div>
+</div>
+
+<div class="card elev-sm detail-dsn">
+  <span class="card-kicker">Deep Space Network link</span>
+  {% if probe.inContact %}
+  <table class="table" style="margin-top:var(--space-2)">
+    <tbody>
+      <tr><td class="text-muted">Dish</td><td>{{ probe.dsnDishName }} &middot; {{ probe.dishLocation }}{% if probe.dishFlag %} {{ probe.dishFlag }}{% endif %}</td></tr>
+      <tr><td class="text-muted">Direction</td><td>{{ probe.dsnDirectionLabel }}</td></tr>
+      <tr><td class="text-muted">Signal type</td><td>{{ probe.dsnSignalType }}</td></tr>
+      <tr><td class="text-muted">Data rate</td><td>{{ probe.dsnDataRateLabel }}{% if probe.dsnDataRateContext %} <span class="text-muted" style="font-size:11px">&middot; {{ probe.dsnDataRateContext }}</span>{% endif %}</td></tr>
+      <tr><td class="text-muted">Band</td><td>{{ probe.dsnBand }}</td></tr>
+      <tr><td class="text-muted">Signal power</td><td>{{ probe.dsnPowerLabel }}{% if probe.dsnPowerContext %} <span class="text-muted" style="font-size:11px">&middot; {{ probe.dsnPowerContext }}</span>{% endif %}</td></tr>
+    </tbody>
+  </table>
+  {% else %}
+  <p class="card-body" style="opacity:.75;margin-top:var(--space-2)">No DSN dish is currently in contact with {{ probe.name }} &mdash; this is normal dish-scheduling behavior, not an error. Live link details will appear here again once a pass begins.</p>
+  {% endif %}
 </div>
 
 <div class="card elev-sm detail-instruments">
@@ -77,7 +107,7 @@
       {% endfor %}
     </tbody>
   </table>
-  <p class="text-muted" style="font-size:11px;margin-top:var(--space-2)">Illustrative wireframe data &mdash; not live values.</p>
+  <p class="text-muted" style="font-size:11px;margin-top:var(--space-2)">Not live telemetry &mdash; transcribed from NASA's own status page, updated by hand when it changes. <a href="https://science.nasa.gov/mission/voyager/where-are-voyager-1-and-voyager-2-now/" target="_blank" rel="noopener">Source: science.nasa.gov <i class="ph ph-arrow-up-right"></i></a></p>
 </div>
 
 {% include '_footer.twig' with {updatedLabel: probe.updatedLabel, stale: probe.stale} %}

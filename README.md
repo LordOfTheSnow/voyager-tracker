@@ -1,6 +1,6 @@
 # Voyager Distance Tracker
 
-[![Version](https://img.shields.io/badge/version-0.5.0-9184d9)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.6.0-9184d9)](CHANGELOG.md)
 [![PHP](https://img.shields.io/badge/PHP-8.1%2B-f97316?logo=php&logoColor=white)](https://www.php.net/)
 [![Database](https://img.shields.io/badge/database-none%20%28by%20design%29-4a6fe3)](#architecture)
 [![License](https://img.shields.io/badge/license-MIT-22c55e)](LICENSE)

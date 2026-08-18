@@ -10,6 +10,7 @@
   --color-accent: #9184d9;
   --color-accent-2: #a7a1db;
   --color-divider: color-mix(in srgb, #e9e9ed 16%, transparent);
+  --color-sun: #f5d878;
 
   --color-neutral-100: #f3f5fe;
   --color-neutral-200: #e4e7f5;
@@ -209,7 +210,7 @@ a:hover { color: var(--color-accent-300); }
 .detail-stat-value-precise { font-size: 19px; }
 .detail-stat-sub { font-size: 11px; margin-top: var(--space-1); }
 .detail-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); margin-bottom: var(--space-6); }
-.detail-instruments { padding: var(--space-4); margin-bottom: var(--space-6); }
+.detail-instruments, .detail-dsn { padding: var(--space-4); margin-bottom: var(--space-6); }
 
 .error-card { max-width: 560px; margin: 15vh auto; padding: var(--space-6); text-align: center; }
 

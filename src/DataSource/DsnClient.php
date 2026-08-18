@@ -19,7 +19,17 @@ final class DsnClient
     ) {
     }
 
-    /** @return array{inContact: bool, dishName: ?string} */
+    /**
+     * @return array{
+     *     inContact: bool,
+     *     dishName: ?string,
+     *     direction: ?string,
+     *     signalType: ?string,
+     *     dataRateBps: ?float,
+     *     band: ?string,
+     *     power: ?float,
+     * }
+     */
     public function fetchSignalStatus(string $spacecraftId): array
     {
         return DsnFeedParser::findSignalStatus($this->fetchXml(), $spacecraftId);

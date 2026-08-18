@@ -23,13 +23,18 @@ final class FileCache
 
     /**
      * @param callable(): array<string, mixed> $producer
+     * @param int|null $ttlSeconds Overrides the constructor TTL for this key only --
+     *     for entries that change far slower than the app's normal 15-minute
+     *     cadence (e.g. a multi-year ephemeris scan) and would otherwise be
+     *     refetched needlessly often.
      * @return array<string, mixed>
      */
-    public function remember(string $key, callable $producer): array
+    public function remember(string $key, callable $producer, ?int $ttlSeconds = null): array
     {
+        $ttl = $ttlSeconds ?? $this->ttlSeconds;
         $path = $this->pathFor($key);
 
-        if (is_file($path) && (time() - filemtime($path)) < $this->ttlSeconds) {
+        if (is_file($path) && (time() - filemtime($path)) < $ttl) {
             return $this->read($path, stale: false);
         }
 

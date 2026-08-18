@@ -87,6 +87,23 @@ final class FileCacheTest extends TestCase
         $this->assertTrue($result['stale']);
     }
 
+    public function testPerCallTtlOverridesConstructorTtl(): void
+    {
+        $cache = new FileCache($this->dir, ttlSeconds: 60);
+        $calls = 0;
+        $producer = function () use (&$calls) {
+            $calls++;
+            return ['value' => $calls];
+        };
+
+        $cache->remember('key', $producer, ttlSeconds: 0);
+        sleep(1);
+        $second = $cache->remember('key', $producer, ttlSeconds: 0);
+
+        $this->assertSame(2, $calls);
+        $this->assertSame(2, $second['value']);
+    }
+
     public function testRethrowsWhenProducerFailsAndNoCacheExistsYet(): void
     {
         $cache = new FileCache($this->dir, ttlSeconds: 60);

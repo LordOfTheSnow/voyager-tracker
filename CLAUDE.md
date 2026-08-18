@@ -42,13 +42,25 @@ Both clients delegate actual response parsing to standalone, network-free classe
 likely to silently break if either upstream changes its response shape — is unit-testable against
 fixture text/XML without hitting the network. Keep that split when touching either client.
 
+`HorizonsClient::fetchEarthLightTimeSeries()` is a third, much heavier Horizons call — a ~700-row,
+20-year future ephemeris scan, cached separately for 24h via `FileCache::remember()`'s per-call TTL
+override — used only to project when each probe's one-way light time will next cross a whole
+light-day boundary (`App\Support\LightDayProjection`). That projection deliberately does *not*
+extrapolate from a single current-speed reading the way "speed" above does: Earth's own orbital
+motion makes a probe's *observed* recession rate (from Earth, not the Sun) swing between roughly
+-8 and +41 km/s over a year, so a constant-rate guess can land months off. Real future samples are
+scanned instead. This call is wrapped in its own try/catch in `VoyagerDataService` — a failure here
+must not break the rest of the page, since it's supplementary, not core data.
+
 On a failed refresh, `FileCache` falls back to the last good cached JSON with `stale: true` rather
 than breaking the page; a hard error page (`templates/error.twig`) only renders if there's no
 cache yet at all (e.g. the very first request after deploy). Per-probe static facts that have no
 live source (launch date, heliopause crossing, constellation, instrument health) live in
 `config/probes.php` — the instrument health table is intentionally static; there is no public API
-that decodes Voyager telemetry to instrument-level status, and the design itself labels that data
-"illustrative."
+that decodes Voyager telemetry to instrument-level status. It's transcribed by hand from NASA's own
+status page (https://science.nasa.gov/mission/voyager/where-are-voyager-1-and-voyager-2-now/) rather
+than fetched live, so it needs a manual re-check against that page whenever it's known to have
+changed.
 
 **Web layer:** Single front controller (`public/index.php`) wires Slim routes directly to
 `VoyagerDataService` calls and Twig templates — no controller classes. `templates/layout.twig` is

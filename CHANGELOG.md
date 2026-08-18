@@ -8,6 +8,29 @@ project's first tagged version — 0.5.0 covers everything built so far, pre-1.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-08-18
+
+### Added
+
+- Deep Space Network link card on each probe's detail page: live dish name and location (with
+  a country flag), downlink/uplink direction, signal type, data rate, band, and signal power —
+  each with a human-readable comparison (e.g. "350 times slower than a 56k dial-up modem",
+  "100 billion times fainter than a typical WiFi signal"). Shows an explanatory message instead
+  of an empty card when no dish is currently in contact.
+- Country flag on the "signal active" badge showing which DSN complex (Goldstone, Canberra, or
+  Madrid) is currently in contact.
+- "Angle against the ecliptic" diagram replacing the old static Position & Heading schematic:
+  an edge-on view of each probe's real trajectory angle against the ecliptic plane, live from
+  Horizons, plus a partial heliopause arc.
+- Light-day crossing projection: each probe's one-way light time now shows when it will next
+  cross a whole light-day boundary, computed from real future JPL Horizons ephemeris samples
+  (not a naive constant-speed guess, which breaks down against Earth's own orbital motion).
+
+### Changed
+
+- Instrument Health table rebuilt from NASA's official Voyager status page
+  (science.nasa.gov), with a source link, replacing the previous illustrative/placeholder data.
+
 ## [0.5.0] - 2026-08-17
 
 ### Added

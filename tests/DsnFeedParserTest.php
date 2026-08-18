@@ -14,7 +14,7 @@ final class DsnFeedParserTest extends TestCase
         $xml = new \SimpleXMLElement(<<<'XML'
 <dsn>
   <dish name="DSS43" azimuthAngle="90" elevationAngle="45">
-    <downSignal active="true" signalType="data" spacecraft="VGR1" spacecraftID="-31"/>
+    <downSignal active="true" signalType="data" dataRate="160" band="X" power="-160" spacecraft="VGR1" spacecraftID="-31"/>
     <target name="VGR1" id="31"/>
   </dish>
 </dsn>
@@ -24,6 +24,11 @@ XML);
 
         $this->assertTrue($status['inContact']);
         $this->assertSame('DSS43', $status['dishName']);
+        $this->assertSame('down', $status['direction']);
+        $this->assertSame('data', $status['signalType']);
+        $this->assertSame(160.0, $status['dataRateBps']);
+        $this->assertSame('X', $status['band']);
+        $this->assertSame(-160.0, $status['power']);
     }
 
     public function testIgnoresInactiveSignals(): void
@@ -40,6 +45,11 @@ XML);
 
         $this->assertFalse($status['inContact']);
         $this->assertNull($status['dishName']);
+        $this->assertNull($status['direction']);
+        $this->assertNull($status['signalType']);
+        $this->assertNull($status['dataRateBps']);
+        $this->assertNull($status['band']);
+        $this->assertNull($status['power']);
     }
 
     public function testReturnsNotInContactWhenNoDishTargetsProbe(): void
@@ -75,5 +85,8 @@ XML);
 
         $this->assertTrue($status['inContact']);
         $this->assertSame('DSS24', $status['dishName']);
+        $this->assertSame('up', $status['direction']);
+        $this->assertNull($status['signalType']);
+        $this->assertNull($status['dataRateBps']);
     }
 }

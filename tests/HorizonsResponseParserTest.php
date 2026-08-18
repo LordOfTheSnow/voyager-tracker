@@ -71,5 +71,17 @@ TEXT;
         $this->assertEqualsWithDelta(171.449196106214, $row['delta'], 1e-9);
         $this->assertEqualsWithDelta(16.8819410, $row['deldot'], 1e-9);
         $this->assertEqualsWithDelta(256.7593255, $row['eclipticLongitudeDeg'], 1e-9);
+        $this->assertEqualsWithDelta(35.1566063, $row['eclipticLatitudeDeg'], 1e-9);
+    }
+
+    public function testParsesEveryRowOfAnObserverSeries(): void
+    {
+        $rows = HorizonsResponseParser::parseObserverSeries(self::SAMPLE_RESULT);
+
+        $this->assertCount(2, $rows);
+        $this->assertSame('2026-Aug-15 00:00', $rows[0]['date']);
+        $this->assertEqualsWithDelta(1425.89948403, $rows[0]['lightTimeMinutes'], 1e-9);
+        $this->assertSame('2026-Aug-16 00:00', $rows[1]['date']);
+        $this->assertEqualsWithDelta(1425.98056887, $rows[1]['lightTimeMinutes'], 1e-9);
     }
 }

@@ -1,7 +1,7 @@
 {
     "name": "lordofthesnow/voyager-tracker",
     "description": "Live distance/status tracker for Voyager 1 and Voyager 2",
-    "version": "0.5.0",
+    "version": "0.6.0",
     "type": "project",
     "license": "MIT",
     "require": {

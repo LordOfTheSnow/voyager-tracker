@@ -93,12 +93,12 @@
     <div class="card elev-sm probe-card">
       <div class="probe-card-head">
         <span class="card-title">{{ v.name }}</span>
-        <span class="tag {{ v.inContact ? 'tag-accent' : 'tag-neutral' }}"><i class="ph ph-broadcast"></i>{{ v.signalLabel }}</span>
+        <span class="tag {{ v.inContact ? 'tag-accent' : 'tag-neutral' }}"><i class="ph ph-broadcast"></i>{{ v.signalLabel }}{% if v.dishFlag %} <span title="{{ v.dishLocation }}">{{ v.dishFlag }}</span>{% endif %}</span>
       </div>
       <div class="stat-grid-3">
         <div><div class="text-muted stat-label">Distance from Sun</div><div class="stat-value">{{ v.distanceFromSun }}</div><div class="text-muted stat-sub">{{ v.distanceFromSunAu }}</div></div>
         <div><div class="text-muted stat-label">Speed</div><div class="stat-value">{{ v.speed }}</div><div class="text-muted stat-sub">{{ v.speedKmH }} &middot; {{ v.speedMph }}</div></div>
-        <div><div class="text-muted stat-label">Light time</div><div class="stat-value">{{ v.oneWayLightTime }}</div></div>
+        <div><div class="text-muted stat-label">Light time</div><div class="stat-value">{{ v.oneWayLightTime }}</div>{% if v.lightDayCrossingShortLabel %}<div class="text-muted stat-sub">{{ v.lightDayCrossingShortLabel }}</div>{% endif %}</div>
       </div>
       <div class="hr"></div>
       <div class="stat-grid-3">
