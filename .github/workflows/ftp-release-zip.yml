@@ -1,0 +1,63 @@
+name: Build FTP release zip
+
+# Publishes a ready-to-upload zip (vendor/ already installed) as a GitHub
+# Release asset whenever a version tag is pushed. This is specifically for
+# the FTP-only shared hosting path documented in README.md, where there's
+# no shell access to run `composer install` on the server -- see that
+# file's "Deploying (FTP-only shared hosting, no shell access)" section.
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          # Matches composer.json's "php": "^8.1" floor, so the committed
+          # vendor/ this produces works on the oldest PHP this app supports.
+          php-version: '8.1'
+          extensions: curl, simplexml, json
+          coverage: none
+
+      - name: Install production dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction
+
+      - name: Assemble FTP-ready zip
+        run: |
+          zip -r "voyager-tracker-ftp-${GITHUB_REF_NAME}.zip" . \
+            -x '.git/*' \
+            -x '.github/*' \
+            -x '.githooks/*' \
+            -x '.gitignore' \
+            -x 'CLAUDE.md' \
+            -x 'docs/*' \
+            -x 'tests/*' \
+            -x 'phpunit.xml.dist' \
+            -x 'var/cache/*'
+
+      - name: Publish release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: voyager-tracker-ftp-${{ github.ref_name }}.zip
+          generate_release_notes: true
+          body: |
+            Pre-built package for FTP-only shared hosting (no shell or Composer access
+            needed on the server) -- `vendor/` is already installed.
+
+            Upload the *contents* of this zip into your host's document root as-is (this
+            `index.php` and `.htaccess` end up alongside `public/`, `src/`, etc.) -- see
+            the README's "Deploying (FTP-only shared hosting, no shell access)" section.
+
+            If your host lets you set the document root to `public/` instead, prefer the
+            plain `git clone`/`git pull` deployment path described in the README; this zip
+            is only needed for the fixed-document-root FTP case.

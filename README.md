@@ -136,11 +136,15 @@ Some basic shared-hosting plans only offer FTP and a fixed document root
 (`public_html/` or similar) that can't be repointed at a subfolder like
 `public/`. This app still works there, with two adjustments:
 
-1. **Run `composer install --no-dev --optimize-autoloader` somewhere you do
-   have PHP + Composer** (locally, or a throwaway VM/container) and upload
-   the resulting `vendor/` directory over FTP along with everything else.
-   `vendor/` is gitignored and not part of a plain repo download/zip — it
-   has to be assembled once and shipped as files.
+1. **Get `vendor/` into the files you upload.** `vendor/` is gitignored and
+   not part of a plain repo download/zip — it has to be assembled once and
+   shipped as files. Easiest: grab the pre-built zip from the
+   [Releases page](https://github.com/LordOfTheSnow/voyager-tracker/releases)
+   (built by `.github/workflows/ftp-release-zip.yml` on every tagged
+   version — `vendor/` is already installed inside it). Otherwise, run
+   `composer install --no-dev --optimize-autoloader` somewhere you do have
+   PHP + Composer (locally, or a throwaway VM/container) and upload the
+   resulting `vendor/` directory over FTP along with everything else.
 2. **Upload the whole repo into the fixed document root as-is** (i.e. this
    `index.php` and `.htaccess` end up at the same level as `public/`,
    `src/`, `vendor/`, etc.) — do *not* move `public/`'s contents up a
