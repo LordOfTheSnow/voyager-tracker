@@ -1,0 +1,11 @@
+.git
+.github
+.githooks
+.gitignore
+CLAUDE.md
+docs
+tests
+phpunit.xml.dist
+var/cache/*.json
+vendor
+.playwright-mcp

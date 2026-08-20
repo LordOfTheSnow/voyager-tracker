@@ -35,6 +35,18 @@ project's first tagged version — 0.5.0 covers everything built so far, pre-1.0
   yellow instead of a barely-visible purple dot, and the canvas is centered instead of
   hugging the left edge on wide/short viewports.
 
+### Deployment
+
+- Docker image support: a `Dockerfile` (`php:8.4-cli-alpine`, PHP's built-in server, runs
+  as non-root) and `compose.yaml`, published automatically to GHCR
+  (`ghcr.io/lordofthesnow/voyager-tracker`) as a multi-arch (amd64/arm64) image on every
+  tagged release. Not intended for production traffic — see the README's Docker section.
+  `PORT`, `CACHE_TTL_SECONDS`, and `HTTP_TIMEOUT_SECONDS` are now overridable via
+  environment variables.
+- Releases are now cut automatically: pushing a version bump to `main` creates the matching
+  git tag and GitHub Release on its own, which in turn drives both the Docker image publish
+  above and the existing FTP release zip — no more pushing tags by hand.
+
 ## [0.6.0] - 2026-08-18
 
 ### Added

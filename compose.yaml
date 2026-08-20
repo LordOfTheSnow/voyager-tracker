@@ -1,0 +1,14 @@
+services:
+  tracker:
+    image: ghcr.io/lordofthesnow/voyager-tracker:latest
+    container_name: voyager-tracker
+    build: .
+    ports:
+      # Host:container. If you override PORT below, update the container
+      # (right-hand) side to match -- it controls what the app actually
+      # binds to inside the container.
+      - "8000:8000"
+    environment:
+      - PORT=${PORT:-8000}
+      - CACHE_TTL_SECONDS=${CACHE_TTL_SECONDS:-}
+      - HTTP_TIMEOUT_SECONDS=${HTTP_TIMEOUT_SECONDS:-}

@@ -4,6 +4,8 @@
 [![PHP](https://img.shields.io/badge/PHP-8.1%2B-f97316?logo=php&logoColor=white)](https://www.php.net/)
 [![Database](https://img.shields.io/badge/database-none%20%28by%20design%29-4a6fe3)](#architecture)
 [![License](https://img.shields.io/badge/license-MIT-22c55e)](LICENSE)
+[![Docker Image](https://img.shields.io/badge/ghcr.io-voyager--tracker-blue?logo=docker)](https://github.com/LordOfTheSnow/voyager-tracker/pkgs/container/voyager-tracker)
+[![Build Status](https://github.com/LordOfTheSnow/voyager-tracker/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/LordOfTheSnow/voyager-tracker/actions/workflows/docker-publish.yml)
 
 Live-ish distance/status tracker for Voyager 1 and Voyager 2, built for basic
 shared PHP hosting. No database — see [Architecture](#architecture) below.
@@ -44,8 +46,10 @@ on their public data.
 - No database: a lazy, per-probe 15-minute file cache with stale-but-served
   fallback if a live refresh fails.
 - No build step: Alpine.js via CDN, zero Node/webpack tooling.
-- Deploys to plain SSH + `git pull` hosting or FTP-only shared hosting with no
-  shell access — see [Deploying](#deploying-ssh-no-root-cron-optional-but-not-required).
+- Deploys to plain SSH + `git pull` hosting, FTP-only shared hosting with no
+  shell access, or Docker — see [Deploying](#deploying-docker).
+- Optional Docker deployment with pre-built multi-architecture images
+  (amd64/arm64), published automatically to GHCR on every release.
 
 ## Requirements
 
@@ -80,6 +84,45 @@ composer test     # PHPUnit — fetch/cache/parsing logic only, no network calls
   views), autoloaded via Composer/PSR-4 (`App\` → `src/`).
 - **Frontend**: Alpine.js via CDN for the "real distances" modal's open/close,
   scale toggle, and pan/zoom. No Node, no build step.
+
+## Deploying (Docker)
+
+Docker is entirely optional. The SSH and FTP paths below remain fully supported
+and require no additional tooling.
+
+> **Not meant for production traffic:** the image is `php:8.4-cli-alpine`
+> running PHP's built-in development server (`php -S`), the same way
+> `composer start` runs locally — chosen for a small image and a simple
+> Dockerfile, not for concurrency or hardening. Fine for personal/low-traffic
+> self-hosting; for anything production-grade, put a real web server
+> (nginx/Apache) or a process manager like php-fpm in front of it.
+
+```
+# Pull and run the latest published image (amd64/arm64)
+docker run -p 8000:8000 ghcr.io/lordofthesnow/voyager-tracker:latest
+
+# Or build locally instead of pulling
+docker build -t voyager-tracker .
+docker run -p 8000:8000 voyager-tracker
+
+# Or use Docker Compose (builds, maps port 8000, and lets you override the
+# cache TTL / HTTP timeout via a .env file or exported shell vars)
+docker compose up
+```
+
+The container always listens on the port given by the `PORT` env var (default
+`8000`) — use Docker's `-p` flag to map any host port to it (e.g.
+`-p 9090:8000`), keeping the container-side number in `-p`/`ports:` matched to
+whatever you set `PORT` to. `CACHE_TTL_SECONDS` and `HTTP_TIMEOUT_SECONDS` are
+also optional env vars, overriding the same-named values in `config/app.php`.
+`var/cache/` is intentionally not persisted across restarts — see
+[Architecture](#architecture) for why a cold cache is harmless here.
+
+Images are built and published automatically by
+[`.github/workflows/docker-publish.yml`](.github/workflows/docker-publish.yml)
+whenever [`.github/workflows/release.yml`](.github/workflows/release.yml) cuts
+a new tagged release (i.e. whenever `composer.json`'s `version` changes on
+`main`) — see [CHANGELOG.md](CHANGELOG.md) for what's in each release.
 
 ## Deploying (SSH, no root, cron optional but not required)
 

@@ -1,0 +1,104 @@
+name: Auto Release
+
+# Same auto-release-on-merge pattern as the LordOfTheSnow/nfl-playoff-rankings-mc-sim
+# project, adapted from pyproject.toml to composer.json. Runs on every push to main;
+# if composer.json's "version" doesn't have a matching git tag yet, this creates that
+# tag + a GitHub Release (title from the merging PR, body from CHANGELOG.md's matching
+# section) and triggers the Docker image build. If the version has already been
+# released, this is a no-op -- most pushes to main won't bump the version.
+#
+# ftp-release-zip.yml needs no changes for this: it already triggers on `v*.*.*` tag
+# pushes, so it keeps working unchanged, just fed by auto-created tags now instead of
+# manually pushed ones.
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    outputs:
+      new_release: ${{ steps.check_tag.outputs.exists == 'false' }}
+      tag: ${{ steps.version.outputs.tag }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Get version from composer.json
+        id: version
+        run: |
+          VERSION=$(jq -r '.version' composer.json)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check if tag already exists
+        id: check_tag
+        run: |
+          if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Get PR title (release name)
+        id: pr_title
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          PR_TITLE=$(gh pr list --state merged --base main --limit 1 \
+            --json title --jq '.[0].title' 2>/dev/null || echo "")
+          if [ -z "$PR_TITLE" ]; then
+            # Fallback: use the commit message subject line
+            PR_TITLE=$(git log -1 --format='%s')
+          fi
+          echo "title=$PR_TITLE" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract changelog for this version
+        id: changelog
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          # Extract content between this version's heading and the next version heading
+          BODY=$(awk -v ver="$VERSION" '
+            BEGIN { found=0 }
+            /^## \[/ {
+              if (found) exit
+              if (index($0, "[" ver "]")) { found=1; next }
+            }
+            found { print }
+          ' CHANGELOG.md)
+          # Write to file to preserve multiline content
+          echo "$BODY" > /tmp/release_body.md
+
+      - name: Create tag and release
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          git tag "${{ steps.version.outputs.tag }}"
+          git push origin "${{ steps.version.outputs.tag }}"
+          gh release create "${{ steps.version.outputs.tag }}" \
+            --title "${{ steps.pr_title.outputs.title }}" \
+            --notes-file /tmp/release_body.md
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  docker:
+    needs: release
+    if: needs.release.outputs.new_release == 'true'
+    uses: ./.github/workflows/docker-publish.yml
+    with:
+      tag: ${{ needs.release.outputs.tag }}
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
