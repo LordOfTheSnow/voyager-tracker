@@ -3,13 +3,16 @@ name: Auto Release
 # Same auto-release-on-merge pattern as the LordOfTheSnow/nfl-playoff-rankings-mc-sim
 # project, adapted from pyproject.toml to composer.json. Runs on every push to main;
 # if composer.json's "version" doesn't have a matching git tag yet, this creates that
-# tag + a GitHub Release (title from the merging PR, body from CHANGELOG.md's matching
-# section) and triggers the Docker image build. If the version has already been
-# released, this is a no-op -- most pushes to main won't bump the version.
+# tag + a GitHub Release (title is just the tag, e.g. "v0.7.0"; body from
+# CHANGELOG.md's matching section) and triggers the Docker image build and the FTP
+# release zip. If the version has already been released, this is a no-op -- most
+# pushes to main won't bump the version.
 #
-# ftp-release-zip.yml needs no changes for this: it already triggers on `v*.*.*` tag
-# pushes, so it keeps working unchanged, just fed by auto-created tags now instead of
-# manually pushed ones.
+# Both downstream jobs are called directly via workflow_call rather than relying on
+# the tag push itself to trigger them: a tag pushed by a workflow using the default
+# GITHUB_TOKEN (as the "Create tag and release" step below does) does not fire other
+# workflows' `on: push: tags:` triggers, so a plain tag push here would silently never
+# reach ftp-release-zip.yml's or docker-publish.yml's own tag-push-style triggers.
 
 on:
   push:
@@ -49,20 +52,6 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Get PR title (release name)
-        id: pr_title
-        if: steps.check_tag.outputs.exists == 'false'
-        run: |
-          PR_TITLE=$(gh pr list --state merged --base main --limit 1 \
-            --json title --jq '.[0].title' 2>/dev/null || echo "")
-          if [ -z "$PR_TITLE" ]; then
-            # Fallback: use the commit message subject line
-            PR_TITLE=$(git log -1 --format='%s')
-          fi
-          echo "title=$PR_TITLE" >> "$GITHUB_OUTPUT"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Extract changelog for this version
         id: changelog
         if: steps.check_tag.outputs.exists == 'false'
@@ -86,7 +75,7 @@ jobs:
           git tag "${{ steps.version.outputs.tag }}"
           git push origin "${{ steps.version.outputs.tag }}"
           gh release create "${{ steps.version.outputs.tag }}" \
-            --title "${{ steps.pr_title.outputs.title }}" \
+            --title "${{ steps.version.outputs.tag }}" \
             --notes-file /tmp/release_body.md
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -102,3 +91,12 @@ jobs:
       packages: write
       attestations: write
       id-token: write
+
+  ftp-zip:
+    needs: release
+    if: needs.release.outputs.new_release == 'true'
+    uses: ./.github/workflows/ftp-release-zip.yml
+    with:
+      tag: ${{ needs.release.outputs.tag }}
+    permissions:
+      contents: write
