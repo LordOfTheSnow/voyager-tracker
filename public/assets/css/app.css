@@ -75,6 +75,9 @@ a:hover { color: var(--color-accent-300); }
 .pulse-dot { animation: pulse 2s ease-in-out infinite; }
 .pulse-dot.is-dormant { animation: none; opacity: .35; fill: var(--color-neutral-500); }
 
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { display: inline-block; animation: spin 1s linear infinite; }
+
 .hr {
   height: 1px; border: 0; margin: var(--space-4) 0;
   background: linear-gradient(to right,
@@ -114,6 +117,11 @@ a:hover { color: var(--color-accent-300); }
 .tag-neutral { background: var(--color-neutral-800); color: var(--color-neutral-100); }
 .tag-outline { border: 1px solid var(--color-accent); color: var(--color-accent); gap: 6px; }
 .tag-warn { border: 1px solid var(--color-neutral-500); color: var(--color-neutral-300); gap: 6px; }
+
+/* Self-hosted SVGs, not Unicode flag emoji -- Windows' default emoji font has no color-flag
+   glyphs (Chrome/Edge on Windows fall back to showing the raw two-letter code as text), so
+   real flag emoji only render as pictures on some OS/browser combinations. */
+.flag-icon { width: 14px; height: auto; vertical-align: -1px; border-radius: 1px; }
 
 /* Border/background live on the full-bleed wrapper; .nav itself matches .page-main's
    max-width + centering, so nav items line up with the content edges below them instead
@@ -180,12 +188,28 @@ a:hover { color: var(--color-accent-300); }
   padding: var(--space-4); border-radius: var(--radius-lg);
   background: var(--color-surface); box-shadow: var(--shadow-lg);
 }
-.modal-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+/* The rotation note sits in its own grid column so it lands in the true center of the header,
+   regardless of how wide the title or the toggle+close group are -- a flex space-between
+   approach can't do that when the flanking groups are different widths. */
+.modal-head {
+  display: grid; grid-template-columns: 1fr auto 1fr; grid-template-areas: "title note right";
+  align-items: center; gap: var(--space-2) var(--space-3);
+}
+.modal-head-right { grid-area: right; display: flex; align-items: center; justify-content: flex-end; gap: var(--space-3); flex-wrap: wrap; }
+.modal-rotation-note { grid-area: note; display: inline-flex; align-items: center; justify-self: center; font-size: 17px; color: var(--color-text); }
 .modal-scale-toggle { display: flex; gap: var(--space-2); }
+/* Below this width the title and toggle/close group each wrap onto two lines of their own --
+   centering the note across that whole (now much taller, uneven) row put it floating in
+   whitespace between them instead of sitting next to anything. Give it its own two-row layout
+   here so it reads as "next to the title" instead. */
+@media (max-width: 640px) {
+  .modal-head { grid-template-columns: 1fr auto; grid-template-areas: "title note" "right right"; }
+  .modal-head-right { justify-content: flex-start; }
+}
 .modal-scale-toggle .btn.is-active { border-color: var(--color-accent); color: var(--color-accent); }
 .modal-canvas {
   background: var(--color-bg); border-radius: var(--radius-md); display: block; touch-action: none;
-  width: min(100%, 70vh); aspect-ratio: 1 / 1; height: auto;
+  width: min(100%, 70vh); aspect-ratio: 1 / 1; height: auto; margin-inline: auto;
 }
 .modal-controls { display: flex; align-items: center; gap: var(--space-2); }
 [x-cloak] { display: none !important; }

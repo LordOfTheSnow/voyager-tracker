@@ -31,10 +31,9 @@ final class FileCache
      */
     public function remember(string $key, callable $producer, ?int $ttlSeconds = null): array
     {
-        $ttl = $ttlSeconds ?? $this->ttlSeconds;
         $path = $this->pathFor($key);
 
-        if (is_file($path) && (time() - filemtime($path)) < $ttl) {
+        if ($this->isFresh($key, $ttlSeconds)) {
             return $this->read($path, stale: false);
         }
 
@@ -51,6 +50,20 @@ final class FileCache
 
             throw $e;
         }
+    }
+
+    /**
+     * Whether a `remember()` call for this key would return cached data without
+     * calling the producer -- i.e. without doing the (potentially slow) network
+     * fetch. Lets callers decide to show a loading state *before* triggering a
+     * refresh, rather than only finding out it was slow after the fact.
+     */
+    public function isFresh(string $key, ?int $ttlSeconds = null): bool
+    {
+        $ttl = $ttlSeconds ?? $this->ttlSeconds;
+        $path = $this->pathFor($key);
+
+        return is_file($path) && (time() - filemtime($path)) < $ttl;
     }
 
     /** @return array<string, mixed> */

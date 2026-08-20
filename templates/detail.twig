@@ -12,12 +12,20 @@
     <h1 style="margin:0 0 4px">{{ probe.name }}</h1>
     <p class="text-muted" style="margin:0;font-size:13px">Launched {{ probe.launchDateLabel }} &middot; {{ probe.subtitleFact }}</p>
   </div>
-  <span class="tag {{ probe.inContact ? 'tag-accent' : 'tag-neutral' }}" style="font-size:12px"><i class="ph ph-broadcast"></i>{{ probe.signalLabel }}{% if probe.dishFlag %} <span title="{{ probe.dishLocation }}">{{ probe.dishFlag }}</span>{% endif %}</span>
+  <span class="tag {{ probe.inContact ? 'tag-accent' : 'tag-neutral' }}" style="font-size:12px"><i class="ph ph-broadcast"></i>{{ probe.signalLabel }}{% if probe.dishFlagSrc %} <img src="{{ probe.dishFlagSrc }}" alt="{{ probe.dishFlagAlt }}" title="{{ probe.dishLocation }}" class="flag-icon">{% endif %}</span>
 </div>
 
 <div class="detail-stats">
-  <div class="card elev-sm"><span class="card-kicker">Distance from Sun</span><div class="detail-stat-value detail-stat-value-precise">{{ probe.distanceFromSunPrecise }}</div></div>
-  <div class="card elev-sm"><span class="card-kicker">Distance from Earth</span><div class="detail-stat-value detail-stat-value-precise">{{ probe.distanceFromEarthPrecise }}</div></div>
+  <div class="card elev-sm">
+    <span class="card-kicker">Distance from Sun</span>
+    <div class="detail-stat-value detail-stat-value-precise">{{ probe.distanceFromSunPrecise }}</div>
+    <div class="text-muted detail-stat-sub">{{ probe.distanceFromSunAu }} &middot; {{ probe.distanceFromSunMiPrecise }}</div>
+  </div>
+  <div class="card elev-sm">
+    <span class="card-kicker">Distance from Earth</span>
+    <div class="detail-stat-value detail-stat-value-precise">{{ probe.distanceFromEarthPrecise }}</div>
+    <div class="text-muted detail-stat-sub">{{ probe.distanceFromEarthAu }} &middot; {{ probe.distanceFromEarthMiPrecise }}</div>
+  </div>
   <div class="card elev-sm">
     <span class="card-kicker">Speed</span>
     <div class="detail-stat-value">{{ probe.speed }}</div>
@@ -75,11 +83,11 @@
   {% if probe.inContact %}
   <table class="table" style="margin-top:var(--space-2)">
     <tbody>
-      <tr><td class="text-muted">Dish</td><td>{{ probe.dsnDishName }} &middot; {{ probe.dishLocation }}{% if probe.dishFlag %} {{ probe.dishFlag }}{% endif %}</td></tr>
+      <tr><td class="text-muted">Dish</td><td>{{ probe.dsnDishName }} &middot; {{ probe.dishLocation }}{% if probe.dishFlagSrc %} <img src="{{ probe.dishFlagSrc }}" alt="{{ probe.dishFlagAlt }}" class="flag-icon">{% endif %}</td></tr>
       <tr><td class="text-muted">Direction</td><td>{{ probe.dsnDirectionLabel }}</td></tr>
       <tr><td class="text-muted">Signal type</td><td>{{ probe.dsnSignalType }}</td></tr>
-      <tr><td class="text-muted">Data rate</td><td>{{ probe.dsnDataRateLabel }}{% if probe.dsnDataRateContext %} <span class="text-muted" style="font-size:11px">&middot; {{ probe.dsnDataRateContext }}</span>{% endif %}</td></tr>
-      <tr><td class="text-muted">Band</td><td>{{ probe.dsnBand }}</td></tr>
+      <tr><td class="text-muted">Data rate</td><td>{{ probe.dsnDataRateLabel }}{% if probe.dsnDataRateLabel %} <span class="text-muted" style="font-size:11px">&middot; bps = bits per second{% if probe.dsnDataRateContext %} &middot; {{ probe.dsnDataRateContext }}{% endif %}</span>{% endif %}</td></tr>
+      <tr><td class="text-muted">Band</td><td>{{ probe.dsnBand }}{% if probe.dsnBandFrequency %} <span class="text-muted" style="font-size:11px">&middot; {{ probe.dsnBandFrequency }}</span>{% endif %}</td></tr>
       <tr><td class="text-muted">Signal power</td><td>{{ probe.dsnPowerLabel }}{% if probe.dsnPowerContext %} <span class="text-muted" style="font-size:11px">&middot; {{ probe.dsnPowerContext }}</span>{% endif %}</td></tr>
     </tbody>
   </table>

@@ -41,6 +41,7 @@ final class VoyagerDataService
     // distance modal (every body, angle + real distance).
     private const HELIOCENTRIC_BODIES = [
         'earth' => ['spkId' => '399', 'label' => 'Earth'],
+        'mars' => ['spkId' => '4', 'label' => 'Mars'],
         'jupiter' => ['spkId' => '5', 'label' => 'Jupiter'],
         'saturn' => ['spkId' => '6', 'label' => 'Saturn'],
         'uranus' => ['spkId' => '7', 'label' => 'Uranus'],
@@ -105,6 +106,28 @@ final class VoyagerDataService
     ) {
     }
 
+    /**
+     * Whether getProbe() for this probe would resolve without a live fetch --
+     * lets the front controller show a loading page instead of blocking the
+     * request on JPL Horizons / DSN Now.
+     */
+    public function isProbeDataFresh(string $slug): bool
+    {
+        return $this->cache->isFresh("live-{$slug}");
+    }
+
+    /** Same check for everything getSummary()/getOrreryLayout()/getDistanceModalLayout() touch. */
+    public function isHomeDataFresh(): bool
+    {
+        foreach ([...array_keys($this->probes), ...array_keys(self::HELIOCENTRIC_BODIES)] as $slug) {
+            if (!$this->cache->isFresh("live-{$slug}")) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     /** Full view model for a probe's detail page. */
     public function getProbe(string $slug): array
     {
@@ -148,8 +171,11 @@ final class VoyagerDataService
             'distanceFromSun' => Formatter::distanceKm($live['distanceFromSunKm']),
             'distanceFromSunPrecise' => Formatter::distanceKmPrecise($live['distanceFromSunKm']),
             'distanceFromSunAu' => Formatter::distanceAu($live['distanceFromSunKm'] / self::AU_IN_KM),
+            'distanceFromSunMiPrecise' => Formatter::distanceMiPrecise($live['distanceFromSunKm']),
             'distanceFromEarth' => Formatter::distanceKm($live['distanceFromEarthKm']),
             'distanceFromEarthPrecise' => Formatter::distanceKmPrecise($live['distanceFromEarthKm']),
+            'distanceFromEarthAu' => Formatter::distanceAu($live['distanceFromEarthKm'] / self::AU_IN_KM),
+            'distanceFromEarthMiPrecise' => Formatter::distanceMiPrecise($live['distanceFromEarthKm']),
             'speed' => Formatter::speedKmS($live['speedKmS']),
             'speedKmH' => Formatter::speedKmH($live['speedKmS']),
             'speedMph' => Formatter::speedMph($live['speedKmS']),
@@ -161,12 +187,14 @@ final class VoyagerDataService
                 ? "signal active \u{b7} DSN {$config['dishSize']} dish"
                 : 'not currently in contact',
             'inContact' => $live['inContact'],
-            'dishFlag' => $station['flag'] ?? null,
+            'dishFlagSrc' => $station['flagSrc'] ?? null,
+            'dishFlagAlt' => $station['flagAlt'] ?? null,
             'dishLocation' => $station['location'] ?? null,
             'dsnDishName' => $live['dishName'],
             'dsnDirectionLabel' => $directionLabel,
             'dsnSignalType' => $live['signalType'] !== null ? ucfirst($live['signalType']) : null,
             'dsnBand' => $live['band'] !== null ? "{$live['band']}-band" : null,
+            'dsnBandFrequency' => $live['band'] !== null ? Formatter::bandFrequency($live['band'], $live['direction']) : null,
             'dsnDataRateLabel' => $live['dataRateBps'] !== null ? Formatter::dataRate($live['dataRateBps']) : null,
             'dsnDataRateContext' => $live['dataRateBps'] !== null ? Formatter::dataRateContext($live['dataRateBps']) : null,
             'dsnPowerLabel' => ($live['power'] !== null && $live['direction'] !== null)
@@ -252,7 +280,8 @@ final class VoyagerDataService
             'instrumentSummary' => $full['instrumentSummary'],
             'signalLabel' => $full['inContact'] ? 'signal active' : 'not in contact',
             'inContact' => $full['inContact'],
-            'dishFlag' => $full['dishFlag'],
+            'dishFlagSrc' => $full['dishFlagSrc'],
+            'dishFlagAlt' => $full['dishFlagAlt'],
             'dishLocation' => $full['dishLocation'],
             'updatedLabel' => $full['updatedLabel'],
             'stale' => $full['stale'],

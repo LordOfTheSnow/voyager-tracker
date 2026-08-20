@@ -1,6 +1,6 @@
 # Voyager Distance Tracker
 
-[![Version](https://img.shields.io/badge/version-0.6.0-9184d9)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.7.0-9184d9)](CHANGELOG.md)
 [![PHP](https://img.shields.io/badge/PHP-8.1%2B-f97316?logo=php&logoColor=white)](https://www.php.net/)
 [![Database](https://img.shields.io/badge/database-none%20%28by%20design%29-4a6fe3)](#architecture)
 [![License](https://img.shields.io/badge/license-MIT-22c55e)](LICENSE)
@@ -22,15 +22,25 @@ on their public data.
   JPL Horizons on every cache refresh.
 - Live DSN contact/signal status from NASA's official DSN Now feed — a probe
   showing "not in contact" is expected dish-scheduling behavior, not an error.
+  Dish-location flags are self-hosted SVGs rather than Unicode flag emoji, so
+  they render consistently across browsers/OS instead of falling back to
+  plain two-letter text on some platforms (e.g. Chrome on Windows).
+- DSN link card shows each transmission's data rate and band, including the
+  band's real deep-space frequency range (e.g. "X-band · 8,400–8,450 MHz")
+  and a unit clarification for the data rate ("bps = bits per second").
 - Home dashboard orrery drawn to true relative scale: Sun, Neptune, the
   heliopause boundary, and both probes, sized dynamically around whatever the
   live data actually needs.
 - "Real distances" modal with pan/zoom log-scale and true-linear-scale views
-  of the whole solar system.
+  of the whole solar system, including Mars, with a note on which direction
+  the bodies orbit.
 - Per-probe detail pages with precise distances, mission facts, constellation
   heading, and instrument status (illustrative, not live — see
   [Architecture](#architecture)).
-- Distances and speeds shown in multiple units (km, AU, km/s, km/h, mph).
+- Distances and speeds shown in multiple units (km, AU, mi, km/s, km/h, mph).
+- A lightweight "fetching latest data" page for the rare visitor whose
+  request lands right after the 15-minute cache expires, instead of a blank
+  browser tab while the refresh completes.
 - No database: a lazy, per-probe 15-minute file cache with stale-but-served
   fallback if a live refresh fails.
 - No build step: Alpine.js via CDN, zero Node/webpack tooling.

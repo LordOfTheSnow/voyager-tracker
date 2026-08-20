@@ -14,6 +14,17 @@ final class Formatter
     private const WIFI_REFERENCE_DBM = -50.0; // a solid few-bars home WiFi signal
     private const MICROWAVE_OVEN_KW = 1.1;
 
+    // NASA Deep Space Network's actual allocated frequency windows per band (not the much
+    // wider generic IEEE radar-band definitions) -- see the DSN Telecommunications Link
+    // Design Handbook. Keyed by DsnFeedParser's raw band code and fetchSignalStatus's raw
+    // 'up'/'down' direction. Ka-band is included for completeness even though Voyager itself
+    // only ever links on S- and X-band.
+    private const DEEP_SPACE_BAND_FREQUENCIES_MHZ = [
+        'S' => ['down' => [2290, 2300], 'up' => [2110, 2120]],
+        'X' => ['down' => [8400, 8450], 'up' => [7145, 7190]],
+        'Ka' => ['down' => [31800, 32300], 'up' => [34200, 34700]],
+    ];
+
     public static function distanceKm(float $km): string
     {
         return number_format($km / 1_000_000_000, 1) . 'B km';
@@ -27,6 +38,11 @@ final class Formatter
     public static function distanceAu(float $au): string
     {
         return number_format($au, 1) . ' AU';
+    }
+
+    public static function distanceMiPrecise(float $km): string
+    {
+        return number_format($km / 1.609344, 0) . ' mi';
     }
 
     public static function speedKmS(float $kmPerSecond): string
@@ -88,6 +104,17 @@ final class Formatter
         }
 
         return number_format($bps, 0) . ' bps';
+    }
+
+    /** @param 'up'|'down'|null $direction */
+    public static function bandFrequency(string $band, ?string $direction): ?string
+    {
+        $range = self::DEEP_SPACE_BAND_FREQUENCIES_MHZ[$band][$direction] ?? null;
+        if ($range === null) {
+            return null;
+        }
+
+        return number_format($range[0]) . '–' . number_format($range[1]) . ' MHz';
     }
 
     /** @param 'up'|'down' $direction */

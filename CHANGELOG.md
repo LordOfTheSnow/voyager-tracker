@@ -8,6 +8,33 @@ project's first tagged version — 0.5.0 covers everything built so far, pre-1.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-08-20
+
+### Added
+
+- AU and precise-mile figures alongside km on each probe's detail page distance cards
+  (Distance from Sun/Earth).
+- Mars back in the "Solar system — real distances" modal, with its own orbit ring and a
+  distinct reddish dot, plus a note on which direction the bodies orbit (counter-clockwise,
+  as viewed from ecliptic north).
+- A lightweight "fetching the latest data" page shown instead of blocking the request when
+  the 15-minute cache has just expired — the rare first visitor after a refresh window sees a
+  spinner that swaps in the real page once the refresh completes, instead of a blank/spinning
+  browser tab.
+- Each probe's DSN band now shows its real deep-space frequency range (e.g. "X-band ·
+  8,400–8,450 MHz", picked for the link's current uplink/downlink direction), and the data
+  rate figure is labeled "bps = bits per second" to avoid bits/bytes ambiguity.
+
+### Changed
+
+- Country flags (DSN dish location) switched from Unicode flag emoji to self-hosted SVG
+  icons — flag emoji don't render as pictures on every browser/OS combination (notably
+  Chrome on Windows, which falls back to plain two-letter text); the SVGs always do.
+- "Real distances" modal's orbit rings now stay a constant thin line at any zoom level
+  (previously they thickened as you zoomed in), the Sun's marker is bigger and colored
+  yellow instead of a barely-visible purple dot, and the canvas is centered instead of
+  hugging the left edge on wide/short viewports.
+
 ## [0.6.0] - 2026-08-18
 
 ### Added

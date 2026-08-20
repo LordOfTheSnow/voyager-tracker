@@ -15,6 +15,7 @@ final class DsnStationTest extends TestCase
 
         $this->assertSame('Goldstone', $station['complex']);
         $this->assertSame('Goldstone, California, USA', $station['location']);
+        $this->assertSame('/assets/img/flags/us.svg', $station['flagSrc']);
     }
 
     public function testResolvesCanberraDish(): void

@@ -2,8 +2,11 @@
 
 {% macro distanceModalBody(slug, body, v1, v2, sunRadiusPx) %}
   {% if slug not in ['sun', 'v1', 'v2'] %}
-    {# V1/V2 are on escape trajectories, not closed orbits, so no ring for them. Center must match VoyagerDataService::DISTANCE_MODAL_CENTER. #}
-    <circle cx="450" cy="450" r="{{ body.radiusPx }}" fill="none" stroke="var(--color-divider)"></circle>
+    {# V1/V2 are on escape trajectories, not closed orbits, so no ring for them. Center must match
+       VoyagerDataService::DISTANCE_MODAL_CENTER. vector-effect keeps the stroke a constant
+       hairline regardless of zoom -- without it, zooming in thickened every ring right along
+       with its radius. #}
+    <circle cx="450" cy="450" r="{{ body.radiusPx }}" fill="none" stroke="var(--color-divider)" stroke-width="1" vector-effect="non-scaling-stroke"></circle>
   {% endif %}
   {# The marker dot + label are decorative, fixed-size UI chrome, not to-scale geometry — only
      the translate() above is real astronomical distance. Counter-scaling by 1/zoom here keeps
@@ -13,11 +16,16 @@
   <g transform="translate({{ body.x }}, {{ body.y }})">
     <g :transform="'scale(' + (1 / zoom) + ')'">
       {% if slug == 'sun' %}
-        <circle r="{{ sunRadiusPx }}" fill="var(--color-accent)"></circle>
+        <circle r="{{ sunRadiusPx }}" fill="var(--color-sun)"></circle>
         <text x="{{ sunRadiusPx + 6 }}" y="5" font-size="14" fill="var(--color-text)">Sun</text>
       {% elseif slug == 'earth' %}
         <circle r="4" fill="#8ec5eb"></circle>
         <text x="9" y="4" font-size="12" fill="var(--color-text)">Earth</text>
+        <text x="9" y="17" font-size="9" fill="var(--color-neutral-500)">{{ body.distanceLabel }}</text>
+      {% elseif slug == 'mars' %}
+        {# Mars' characteristic rusty-red/orange, distinct from Earth's paler #8ec5eb. #}
+        <circle r="4" fill="#c1440e"></circle>
+        <text x="9" y="4" font-size="12" fill="var(--color-text)">Mars</text>
         <text x="9" y="17" font-size="9" fill="var(--color-neutral-500)">{{ body.distanceLabel }}</text>
       {% elseif slug in ['v1', 'v2'] %}
         <circle r="5" fill="var(--color-accent)" class="pulse-dot {{ (slug == 'v1' ? v1.inContact : v2.inContact) ? '' : 'is-dormant' }}"></circle>
@@ -93,7 +101,7 @@
     <div class="card elev-sm probe-card">
       <div class="probe-card-head">
         <span class="card-title">{{ v.name }}</span>
-        <span class="tag {{ v.inContact ? 'tag-accent' : 'tag-neutral' }}"><i class="ph ph-broadcast"></i>{{ v.signalLabel }}{% if v.dishFlag %} <span title="{{ v.dishLocation }}">{{ v.dishFlag }}</span>{% endif %}</span>
+        <span class="tag {{ v.inContact ? 'tag-accent' : 'tag-neutral' }}"><i class="ph ph-broadcast"></i>{{ v.signalLabel }}{% if v.dishFlagSrc %} <img src="{{ v.dishFlagSrc }}" alt="{{ v.dishFlagAlt }}" title="{{ v.dishLocation }}" class="flag-icon">{% endif %}</span>
       </div>
       <div class="stat-grid-3">
         <div><div class="text-muted stat-label">Distance from Sun</div><div class="stat-value">{{ v.distanceFromSun }}</div><div class="text-muted stat-sub">{{ v.distanceFromSunAu }}</div></div>
@@ -125,11 +133,19 @@
   <div class="modal-panel" @click.outside="hide()">
     <div class="modal-head">
       <span class="card-title">Solar system — real distances</span>
-      <div class="modal-scale-toggle">
-        <button class="btn btn-secondary" :class="scaleMode === 'log' ? 'is-active' : ''" @click="setScaleMode('log')">Log scale</button>
-        <button class="btn btn-secondary" :class="scaleMode === 'linear' ? 'is-active' : ''" @click="setScaleMode('linear')">True linear scale</button>
+      {# Positions are a static snapshot, not an animation -- this just notes which way
+         increasing ecliptic longitude sweeps (see Orrery::project), the real direction
+         these bodies orbit the Sun as viewed from ecliptic north. #}
+      <span class="modal-rotation-note" title="Bodies orbit counter-clockwise, as viewed from ecliptic north">
+        <i class="ph ph-arrow-counter-clockwise"></i>
+      </span>
+      <div class="modal-head-right">
+        <div class="modal-scale-toggle">
+          <button class="btn btn-secondary" :class="scaleMode === 'log' ? 'is-active' : ''" @click="setScaleMode('log')">Log scale</button>
+          <button class="btn btn-secondary" :class="scaleMode === 'linear' ? 'is-active' : ''" @click="setScaleMode('linear')">True linear scale</button>
+        </div>
+        <button class="btn btn-icon btn-secondary" @click="hide()" aria-label="Close"><i class="ph ph-x"></i></button>
       </div>
-      <button class="btn btn-icon btn-secondary" @click="hide()" aria-label="Close"><i class="ph ph-x"></i></button>
     </div>
 
     <svg class="modal-canvas" viewBox="0 0 900 900" width="100%" height="900"
@@ -154,7 +170,7 @@
           <line x1="{{ distanceModal.log.sun.x }}" y1="{{ distanceModal.log.sun.y }}" x2="{{ distanceModal.log.v1.x }}" y2="{{ distanceModal.log.v1.y }}" stroke="var(--color-accent-600)" stroke-width="2" stroke-dasharray="2 4" vector-effect="non-scaling-stroke"></line>
           <line x1="{{ distanceModal.log.sun.x }}" y1="{{ distanceModal.log.sun.y }}" x2="{{ distanceModal.log.v2.x }}" y2="{{ distanceModal.log.v2.y }}" stroke="var(--color-accent-600)" stroke-width="2" stroke-dasharray="2 4" vector-effect="non-scaling-stroke"></line>
           {% for slug, body in distanceModal.log %}
-            {{ distanceModalBody(slug, body, v1, v2, 10) }}
+            {{ distanceModalBody(slug, body, v1, v2, 14) }}
           {% endfor %}
         </g>
         <g x-show="scaleMode === 'linear'">

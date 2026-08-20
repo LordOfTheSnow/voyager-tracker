@@ -42,6 +42,13 @@ $renderDataError = static function ($request, $response, Twig $twig) {
 };
 
 $app->get('/', function ($request, $response) use ($dataService, $twig, $appConfig, $renderDataError) {
+    if (!isset($request->getQueryParams()['refresh']) && !$dataService->isHomeDataFresh()) {
+        return $twig->render($response, 'loading.twig', [
+            'refreshUrl' => '/?refresh=1',
+            'refreshCadenceLabel' => $appConfig['refreshCadenceLabel'],
+        ]);
+    }
+
     try {
         $v1 = $dataService->getSummary('voyager-1');
         $v2 = $dataService->getSummary('voyager-2');
@@ -63,7 +70,14 @@ $app->get('/', function ($request, $response) use ($dataService, $twig, $appConf
     ]);
 });
 
-$app->get('/voyager-1', function ($request, $response) use ($dataService, $twig, $renderDataError) {
+$app->get('/voyager-1', function ($request, $response) use ($dataService, $twig, $appConfig, $renderDataError) {
+    if (!isset($request->getQueryParams()['refresh']) && !$dataService->isProbeDataFresh('voyager-1')) {
+        return $twig->render($response, 'loading.twig', [
+            'refreshUrl' => '/voyager-1?refresh=1',
+            'refreshCadenceLabel' => $appConfig['refreshCadenceLabel'],
+        ]);
+    }
+
     try {
         $probe = $dataService->getProbe('voyager-1');
     } catch (\Throwable) {
@@ -73,7 +87,14 @@ $app->get('/voyager-1', function ($request, $response) use ($dataService, $twig,
     return $twig->render($response, 'detail.twig', ['probe' => $probe, 'active' => 'voyager-1']);
 });
 
-$app->get('/voyager-2', function ($request, $response) use ($dataService, $twig, $renderDataError) {
+$app->get('/voyager-2', function ($request, $response) use ($dataService, $twig, $appConfig, $renderDataError) {
+    if (!isset($request->getQueryParams()['refresh']) && !$dataService->isProbeDataFresh('voyager-2')) {
+        return $twig->render($response, 'loading.twig', [
+            'refreshUrl' => '/voyager-2?refresh=1',
+            'refreshCadenceLabel' => $appConfig['refreshCadenceLabel'],
+        ]);
+    }
+
     try {
         $probe = $dataService->getProbe('voyager-2');
     } catch (\Throwable) {

@@ -104,6 +104,30 @@ final class FileCacheTest extends TestCase
         $this->assertSame(2, $second['value']);
     }
 
+    public function testIsFreshFalseWhenKeyNeverCached(): void
+    {
+        $cache = new FileCache($this->dir, ttlSeconds: 60);
+
+        $this->assertFalse($cache->isFresh('key'));
+    }
+
+    public function testIsFreshTrueWithinTtl(): void
+    {
+        $cache = new FileCache($this->dir, ttlSeconds: 60);
+        $cache->remember('key', fn () => ['value' => 'good']);
+
+        $this->assertTrue($cache->isFresh('key'));
+    }
+
+    public function testIsFreshFalseAfterTtlExpires(): void
+    {
+        $cache = new FileCache($this->dir, ttlSeconds: 0);
+        $cache->remember('key', fn () => ['value' => 'good']);
+        sleep(1);
+
+        $this->assertFalse($cache->isFresh('key'));
+    }
+
     public function testRethrowsWhenProducerFailsAndNoCacheExistsYet(): void
     {
         $cache = new FileCache($this->dir, ttlSeconds: 60);

@@ -1,0 +1,31 @@
+{% extends "layout.twig" %}
+
+{% block title %}Loading — Voyager Distance Tracker{% endblock %}
+
+{% block head %}
+{# No-JS fallback: without the fetch+swap below, just navigate to the real page directly. #}
+<noscript><meta http-equiv="refresh" content="0;url={{ refreshUrl }}"></noscript>
+{% endblock %}
+
+{% block content %}
+<div class="card elev-sm error-card">
+  <i class="ph ph-circle-notch spin" style="font-size:32px;color:var(--color-accent)"></i>
+  <h2 style="margin-top:var(--space-3)">Fetching the latest position data&hellip;</h2>
+  <p class="card-body">The cached data just expired and is refreshing now from JPL Horizons and DSN Now &mdash; it {{ refreshCadenceLabel }}. This only happens to the first visitor after each refresh window; it'll just be a moment.</p>
+  <a href="{{ refreshUrl }}" class="btn btn-secondary" id="loading-manual-link" style="align-self:center;margin-top:var(--space-2)">Refresh now</a>
+</div>
+<script>
+  {# Runs as a plain inline script (not deferred/async), so document.write() below is allowed --
+     see CLAUDE.md's Alpine ordering note for why that distinction matters for scripts here. #}
+  fetch({{ refreshUrl|json_encode|raw }}, { cache: 'no-store' })
+    .then(function (response) { return response.text(); })
+    .then(function (html) {
+      document.open();
+      document.write(html);
+      document.close();
+    })
+    .catch(function () {
+      document.getElementById('loading-manual-link').textContent = 'Still refreshing — click to try again';
+    });
+</script>
+{% endblock %}
