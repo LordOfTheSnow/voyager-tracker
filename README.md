@@ -5,7 +5,7 @@
 [![Database](https://img.shields.io/badge/database-none%20%28by%20design%29-4a6fe3)](#architecture)
 [![License](https://img.shields.io/badge/license-MIT-22c55e)](LICENSE)
 [![Docker Image](https://img.shields.io/badge/ghcr.io-voyager--tracker-blue?logo=docker)](https://github.com/LordOfTheSnow/voyager-tracker/pkgs/container/voyager-tracker)
-[![Build Status](https://github.com/LordOfTheSnow/voyager-tracker/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/LordOfTheSnow/voyager-tracker/actions/workflows/docker-publish.yml)
+[![Release](https://github.com/LordOfTheSnow/voyager-tracker/actions/workflows/release.yml/badge.svg)](https://github.com/LordOfTheSnow/voyager-tracker/actions/workflows/release.yml)
 
 Live-ish distance/status tracker for Voyager 1 and Voyager 2, built for basic
 shared PHP hosting. No database — see [Architecture](#architecture) below.
