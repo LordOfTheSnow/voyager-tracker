@@ -14,6 +14,8 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 
 $appConfig = require dirname(__DIR__) . '/config/app.php';
 $probes = require dirname(__DIR__) . '/config/probes.php';
+$milestones = require dirname(__DIR__) . '/config/milestones.php';
+$about = require dirname(__DIR__) . '/config/about.php';
 
 $app = AppFactory::create();
 $app->addRoutingMiddleware();
@@ -104,11 +106,21 @@ $app->get('/voyager-2', function ($request, $response) use ($dataService, $twig,
     return $twig->render($response, 'detail.twig', ['probe' => $probe, 'active' => 'voyager-2']);
 });
 
-foreach (['milestones' => 'Milestones', 'about' => 'About'] as $slug => $title) {
-    $app->get("/{$slug}", function ($request, $response) use ($twig, $slug, $title) {
-        return $twig->render($response, 'stub.twig', ['title' => $title, 'active' => $slug]);
-    });
-}
+$app->get('/about', function ($request, $response) use ($twig, $about) {
+    return $twig->render($response, 'about.twig', ['active' => 'about', 'about' => $about]);
+});
+
+$app->get('/milestones', function ($request, $response) use ($twig, $milestones) {
+    $sorted = $milestones;
+    usort($sorted, static fn (array $a, array $b): int => $b['date'] <=> $a['date']);
+
+    return $twig->render($response, 'milestones.twig', [
+        'milestones' => $sorted,
+        'milestoneCount' => count($sorted),
+        'oldestYear' => date('Y', strtotime(end($sorted)['date'])),
+        'active' => 'milestones',
+    ]);
+});
 
 $app->get('/sources', function ($request, $response) use ($twig) {
     return $twig->render($response, 'sources.twig', ['active' => 'sources']);

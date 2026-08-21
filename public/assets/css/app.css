@@ -9,6 +9,8 @@
   --color-text: #e9e9ed;
   --color-accent: #9184d9;
   --color-accent-2: #a7a1db;
+  --color-v1: var(--color-accent-400);
+  --color-v2: oklch(78% 0.09 350);
   --color-divider: color-mix(in srgb, #e9e9ed 16%, transparent);
   --color-sun: #f5d878;
 
@@ -117,6 +119,8 @@ a:hover { color: var(--color-accent-300); }
 .tag-neutral { background: var(--color-neutral-800); color: var(--color-neutral-100); }
 .tag-outline { border: 1px solid var(--color-accent); color: var(--color-accent); gap: 6px; }
 .tag-warn { border: 1px solid var(--color-neutral-500); color: var(--color-neutral-300); gap: 6px; }
+.tag-v1 { border: 1px solid var(--color-v1); color: var(--color-v1); background: color-mix(in oklch, var(--color-v1) 22%, transparent); }
+.tag-v2 { border: 1px solid var(--color-v2); color: var(--color-v2); background: color-mix(in oklch, var(--color-v2) 22%, transparent); }
 
 /* Self-hosted SVGs, not Unicode flag emoji -- Windows' default emoji font has no color-flag
    glyphs (Chrome/Edge on Windows fall back to showing the raw two-letter code as text), so
@@ -238,12 +242,95 @@ a:hover { color: var(--color-accent-300); }
 
 .error-card { max-width: 560px; margin: 15vh auto; padding: var(--space-6); text-align: center; }
 
+.about-hero {
+  position: relative; overflow: hidden; border-radius: var(--radius-lg);
+  min-height: 440px; padding: var(--space-8) var(--space-6);
+  background: var(--color-surface); margin-bottom: var(--space-6);
+}
+/* Sized by height at its natural aspect ratio (not object-fit: cover) -- the source is
+   near-square and the hero is wide and short, so cover would force a huge scale-up to fill
+   the width and crop almost the whole spacecraft out of frame. This keeps the whole probe
+   in view, anchored to one side so the centered text has room on the other. */
+.about-hero-bg { position: absolute; top: 50%; right: 2%; height: 92%; width: auto; max-width: none; transform: translateY(-50%); z-index: 0; }
+/* Darkest at center (where the header/text card sit) fading out toward the edges, so the
+   probe illustration behind stays legible-background-faint under text but still reads as a
+   picture nearer the hero's edges -- a plain flat scrim would either wash the art out
+   entirely or fight with the text depending which strength won. */
+.about-hero-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: radial-gradient(ellipse 70% 70% at center,
+    color-mix(in srgb, var(--color-surface) 88%, transparent) 0%,
+    color-mix(in srgb, var(--color-surface) 60%, transparent) 55%,
+    color-mix(in srgb, var(--color-surface) 15%, transparent) 100%);
+}
+.about-hero-content { position: relative; z-index: 2; max-width: 640px; }
+.about-text-card { padding: var(--space-4); }
+
+.milestones-legend { display: flex; gap: var(--space-3); margin-bottom: var(--space-4); }
+.milestones-legend-btn { cursor: pointer; user-select: none; font-size: 11px; font-weight: 600; padding: 4px 10px; transition: opacity .15s; }
+.milestones-legend-btn.is-dimmed { opacity: .4; }
+
+/* One shared markup tree for both breakpoints -- the desktop 3-column (left/dot/right) and
+   mobile 2-column (dot/card) layouts are just two grid-template-areas assignments over the
+   same three child elements per row, switched in the 860px media query below. Only one of
+   .milestone-slot--left/--right ever has card content per row (each event belongs to exactly
+   one probe); on mobile both map onto the same "card" area, so the empty one contributes zero
+   size and the populated one renders there instead of duplicating the row markup per breakpoint. */
+.milestones-timeline { position: relative; }
+.milestones-timeline-line {
+  position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; transform: translateX(-50%);
+  background: linear-gradient(to bottom, transparent, var(--color-divider) 48px,
+    var(--color-divider) calc(100% - 48px), transparent);
+  z-index: 0;
+}
+.milestones-rows { display: flex; flex-direction: column; gap: var(--space-4); position: relative; z-index: 1; }
+.milestone-row {
+  display: grid; grid-template-columns: 1fr 48px 1fr; grid-template-areas: "left dot right";
+  column-gap: var(--space-3); align-items: center;
+}
+.milestone-slot { width: 100%; max-width: 420px; }
+.milestone-slot--left { grid-area: left; justify-self: end; }
+.milestone-slot--right { grid-area: right; justify-self: start; }
+.milestone-dot-col { grid-area: dot; display: flex; align-items: center; justify-content: center; }
+.milestone-dot {
+  width: 10px; height: 10px; border-radius: 50%; background: var(--color-accent);
+  box-shadow: 0 0 0 4px var(--color-bg), 0 0 8px var(--color-accent);
+}
+.milestone-card-title { font-size: 15px; display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+/* Redundant with card side/position on desktop, where the probe is unambiguous -- shown only
+   once the layout collapses to one column below. */
+.milestone-probe-tag { display: none; }
+
 @media (max-width: 860px) {
   .home-grid, .detail-two-col { grid-template-columns: 1fr; }
   .detail-stats { grid-template-columns: repeat(2, 1fr); }
   .page-main { padding: var(--space-6) var(--space-4); }
   .nav { padding: var(--space-3) var(--space-4); }
   h1 { font-size: 32px; }
+
+  .milestones-timeline-line { left: 10px; transform: none; }
+  .milestone-row { grid-template-columns: 20px 1fr; grid-template-areas: "dot card"; align-items: start; }
+  .milestone-slot--left, .milestone-slot--right { grid-area: card; justify-self: stretch; max-width: none; }
+  .milestone-dot-col { padding-top: 14px; align-items: flex-start; }
+  .milestone-probe-tag { display: inline-flex; }
+
+  .about-hero { min-height: 360px; padding: var(--space-6) var(--space-4); }
+  /* On the desktop-sized hero this sits beside the text as a large side accent; at this
+     narrower width/shorter height there's no "beside" left, so it would otherwise loom
+     directly behind the text at nearly full size. Shrink it into a corner accent instead. */
+  .about-hero-bg { top: 4%; right: -10%; height: 62%; transform: none; }
+
+  /* The orrery, distance modal, and ecliptic-angle diagrams size their <text> in absolute px
+     (see templates/home.twig, detail.twig) so labels no longer shrink with the viewBox on a
+     narrow viewport -- but at the same 9-14px used on desktop they're still too small to read
+     comfortably on an actual phone. Override by the exact attribute value (plain CSS already
+     beats an SVG presentation attribute, no !important needed) so hierarchy between primary
+     labels and AU/km sub-labels is preserved, just at larger absolute sizes. */
+  .page-main svg text[font-size="9px"],
+  .page-main svg text[font-size="10px"] { font-size: 11px; }
+  .page-main svg text[font-size="11px"],
+  .page-main svg text[font-size="12px"] { font-size: 13px; }
+  .page-main svg text[font-size="14px"] { font-size: 15px; }
 }
 
 @media (max-width: 520px) {

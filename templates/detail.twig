@@ -45,20 +45,20 @@
     {% set d = probe.eclipticDiagram %}
     <svg width="100%" height="260" viewBox="0 0 400 260" style="display:block;margin:var(--space-2) 0">
       <path d="M {{ d.heliopauseTop.x }} {{ d.heliopauseTop.y }} A {{ d.heliopauseRadius }} {{ d.heliopauseRadius }} 0 0 1 {{ d.heliopauseBottom.x }} {{ d.heliopauseBottom.y }}" fill="none" stroke="var(--color-sun)" stroke-width="1.5" stroke-dasharray="6 5" opacity=".8"/>
-      <text x="{{ d.heliopauseLabelX }}" y="{{ d.sun.y - 8 }}" font-size="9" fill="var(--color-sun)" opacity=".9">Heliopause (approx.)</text>
+      <text x="{{ d.heliopauseLabelX }}" y="{{ d.sun.y - 8 }}" font-size="9px" fill="var(--color-sun)" opacity=".9">Heliopause (approx.)</text>
 
       <line x1="{{ d.sun.x }}" y1="{{ d.sun.y }}" x2="{{ d.planeEndX }}" y2="{{ d.sun.y }}" stroke="var(--color-neutral-600)" stroke-width="1"/>
-      <text x="{{ d.planeEndX - 88 }}" y="{{ d.sun.y + 16 }}" font-size="9" fill="var(--color-neutral-500)">Ecliptic plane</text>
+      <text x="{{ d.planeEndX - 88 }}" y="{{ d.sun.y + 16 }}" font-size="9px" fill="var(--color-neutral-500)">Ecliptic plane</text>
 
       <line x1="{{ d.sun.x }}" y1="{{ d.sun.y }}" x2="{{ d.probe.x }}" y2="{{ d.probe.y }}" stroke="var(--color-accent-2)" stroke-width="2" stroke-dasharray="1 5" stroke-linecap="round"/>
       <path d="M {{ d.arcStart.x }} {{ d.arcStart.y }} A {{ d.arcRadius }} {{ d.arcRadius }} 0 0 {{ d.arcSweepFlag }} {{ d.arcEnd.x }} {{ d.arcEnd.y }}" fill="none" stroke="var(--color-accent)" stroke-width="1" opacity=".7"/>
-      <text x="{{ d.arcLabel.x }}" y="{{ d.arcLabel.y }}" font-size="11" fill="var(--color-accent)" text-anchor="middle">{{ d.angleLabel }}</text>
+      <text x="{{ d.arcLabel.x }}" y="{{ d.arcLabel.y }}" font-size="11px" fill="var(--color-accent)" text-anchor="middle">{{ d.angleLabel }}</text>
 
       <circle cx="{{ d.sun.x }}" cy="{{ d.sun.y }}" r="9" fill="var(--color-accent)"/>
-      <text x="{{ d.sun.x - 12 }}" y="{{ d.sun.y + 25 }}" font-size="10" fill="var(--color-neutral-500)">Sun</text>
+      <text x="{{ d.sun.x - 12 }}" y="{{ d.sun.y + 25 }}" font-size="10px" fill="var(--color-neutral-500)">Sun</text>
 
       <circle cx="{{ d.probe.x }}" cy="{{ d.probe.y }}" r="5" fill="var(--color-accent)" class="pulse-dot {{ probe.inContact ? '' : 'is-dormant' }}"/>
-      <text x="{{ d.probe.x - 45 }}" y="{{ d.probeLabelY }}" font-size="12" fill="var(--color-text)">{{ probe.name }}</text>
+      <text x="{{ d.probe.x - 45 }}" y="{{ d.probeLabelY }}" font-size="12px" fill="var(--color-text)">{{ probe.name }}</text>
     </svg>
     <p class="card-body" style="opacity:.75">Heading {{ probe.heading }}, currently about {{ d.angleLabel }} {{ d.directionWord }} the ecliptic plane &mdash; a nearly constant angle, since both Voyagers are now moving essentially radially outward from the Sun. Left the heliopause on {{ probe.heliopauseCrossingLabel }} and is now in interstellar space.</p>
   </div>

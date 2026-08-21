@@ -1,0 +1,36 @@
+{% extends "layout.twig" %}
+
+{% block title %}About — Voyager Distance Tracker{% endblock %}
+
+{% block content %}
+
+<section class="about-hero">
+  {# NASA render (science.nasa.gov/wp-content/uploads/2017/12/voyager.png), background
+     removed by hand -- flood-filled the near-black starfield to transparent (connected-
+     region only, so the spacecraft's own dark shadowed parts survive) rather than a global
+     color threshold, then cleared residual star-speck islands via connected-component area
+     filtering. See public/assets/img/voyager-probe.webp. #}
+  <img class="about-hero-bg" src="/assets/img/voyager-probe.webp" alt="" aria-hidden="true">
+  <div class="about-hero-overlay"></div>
+
+  <div class="about-hero-content">
+    <div class="page-header">
+      <div>
+        <h6 style="color:var(--color-accent)">ABOUT</h6>
+        <h1 style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">Voyager Distance Tracker <span class="nav-version" style="font-size:16px">v{{ appVersion }}</span></h1>
+        <p class="text-muted" style="margin:0;font-size:13px">by LordOfTheSnow &middot; <a href="https://github.com/LordOfTheSnow/voyager-tracker" target="_blank" rel="noopener">View on GitHub <i class="ph ph-github-logo"></i></a></p>
+      </div>
+    </div>
+
+    {# Edit this text in config/about.php, not here. Rendered unescaped so paragraphs there
+       can use inline HTML (<strong>, <em>) -- safe only because this is trusted, hand-edited
+       config content, not user input. #}
+    <div class="card elev-sm about-text-card">
+      {% for paragraph in about.paragraphs %}
+      <p class="card-body"{% if loop.last %} style="margin-bottom:0"{% endif %}>{{ paragraph|raw }}</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

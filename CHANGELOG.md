@@ -8,6 +8,41 @@ project's first tagged version — 0.5.0 covers everything built so far, pre-1.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-08-21
+
+First stable release — the last two placeholder nav pages (Milestones, About) are now built out,
+so the site has no remaining stub content.
+
+### Added
+
+- Milestones page: a chronological timeline of both missions' major events (launch, planetary
+  encounters, heliopause crossings, and more), filterable by probe, in a responsive layout that
+  collapses from a two-column desktop timeline to a single-column mobile one.
+- About page: mission background and project info, with a background-removed NASA Voyager probe
+  photo, the app version, and a "by LordOfTheSnow" byline linking to the GitHub repo. Page copy
+  lives in `config/about.php` (supports `<strong>`/`<em>` inline formatting) instead of the
+  template, matching how `probes.php`/`milestones.php` already keep hand-edited content out of
+  templates.
+- Mission-milestone and About-page background image sources added to the Sources page citations.
+
+### Changed
+
+- Renamed the "Solar system — real distances" modal to "Solar system — distances" — the old name
+  was misleading on the log-scale view, which isn't showing linearly-proportional (i.e. literally
+  "real") distances.
+- True linear scale view's Sun marker now scales directly with the zoom level (vanishingly small
+  at zoom 1, growing to roughly its true size relative to Earth around zoom 10, where both are
+  visible together), instead of either a fixed decorative size or a literal — and at any zoom
+  level where Earth is also visible, all but invisible — astronomical scale.
+- Nav order: About moved to the rightmost position, after Sources.
+
+### Fixed
+
+- Planet/probe labels and AU distance readouts on the home orrery, distance modal, and
+  ecliptic-angle diagram were unreadable on narrow mobile screens: SVG text now uses explicit
+  pixel font sizes (immune to the viewBox scaling that was shrinking them) with an additional
+  size bump on mobile viewports.
+
 ## [0.7.0] - 2026-08-20
 
 ### Added

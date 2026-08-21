@@ -1,4 +1,17 @@
 document.addEventListener('alpine:init', () => {
+  Alpine.data('milestonesFilter', () => ({
+    filterProbe: null,
+    toggle(probe) {
+      this.filterProbe = this.filterProbe === probe ? null : probe;
+    },
+    isDimmed(probe) {
+      return this.filterProbe !== null && this.filterProbe !== probe;
+    },
+    isVisible(probe) {
+      return this.filterProbe === null || this.filterProbe === probe;
+    },
+  }));
+
   Alpine.data('distanceModal', () => ({
     // Must match VoyagerDataService::DISTANCE_MODAL_CENTER.
     centerX: 450,

@@ -343,7 +343,7 @@ final class VoyagerDataService
     }
 
     /**
-     * Layout for the "real distances" modal: every tracked body's actual
+     * Layout for the "Solar system — distances" modal: every tracked body's actual
      * position from the Sun, on two alternate scales (see the constants
      * above). Shares the same per-body cache entries as getOrreryLayout(),
      * so calling both on one page load costs no extra Horizons requests.

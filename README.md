@@ -1,6 +1,6 @@
 # Voyager Distance Tracker
 
-[![Version](https://img.shields.io/badge/version-0.7.0-9184d9)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.0.0-9184d9)](CHANGELOG.md)
 [![PHP](https://img.shields.io/badge/PHP-8.1%2B-f97316?logo=php&logoColor=white)](https://www.php.net/)
 [![Database](https://img.shields.io/badge/database-none%20%28by%20design%29-4a6fe3)](#architecture)
 [![License](https://img.shields.io/badge/license-MIT-22c55e)](LICENSE)
@@ -17,9 +17,6 @@ on their public data.
 
 ## Features
 
-> **Work in progress:** the app is pre-1.0 (see [CHANGELOG.md](CHANGELOG.md)).
-> The Milestones and About nav links are still placeholder "coming soon" pages.
-
 - Live distance, speed, and light-time for both probes, sourced directly from
   JPL Horizons on every cache refresh.
 - Live DSN contact/signal status from NASA's official DSN Now feed — a probe
@@ -33,12 +30,15 @@ on their public data.
 - Home dashboard orrery drawn to true relative scale: Sun, Neptune, the
   heliopause boundary, and both probes, sized dynamically around whatever the
   live data actually needs.
-- "Real distances" modal with pan/zoom log-scale and true-linear-scale views
+- "Solar system — distances" modal with pan/zoom log-scale and true-linear-scale views
   of the whole solar system, including Mars, with a note on which direction
   the bodies orbit.
 - Per-probe detail pages with precise distances, mission facts, constellation
   heading, and instrument status (illustrative, not live — see
   [Architecture](#architecture)).
+- Milestones page: a filterable timeline of both missions' major events, from launch through
+  planetary encounters and the heliopause crossings.
+- About page with project background and a link to the source repo.
 - Distances and speeds shown in multiple units (km, AU, mi, km/s, km/h, mph).
 - A lightweight "fetching latest data" page for the rare visitor whose
   request lands right after the 15-minute cache expires, instead of a blank
@@ -82,7 +82,7 @@ composer test     # PHPUnit — fetch/cache/parsing logic only, no network calls
   only appears if there's no cache yet at all (e.g. first request ever).
 - **Backend**: Slim Framework (routing) + Twig (templates — no PHP logic in
   views), autoloaded via Composer/PSR-4 (`App\` → `src/`).
-- **Frontend**: Alpine.js via CDN for the "real distances" modal's open/close,
+- **Frontend**: Alpine.js via CDN for the "Solar system — distances" modal's open/close,
   scale toggle, and pan/zoom. No Node, no build step.
 
 ## Deploying (Docker)

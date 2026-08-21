@@ -1,0 +1,55 @@
+{% extends "layout.twig" %}
+
+{% block title %}Milestones — Voyager Distance Tracker{% endblock %}
+
+{% macro milestoneCard(item) %}
+  <div class="card elev-sm">
+    <span class="tag {{ item.probe == 'voyager-1' ? 'tag-v1' : 'tag-v2' }} milestone-probe-tag">{{ item.probe == 'voyager-1' ? 'VOYAGER 1' : 'VOYAGER 2' }}</span>
+    <span class="tag tag-outline" style="font-size:10px">{{ item.dateLabel }}</span>
+    <div class="card-title milestone-card-title"><i class="ph ph-{{ item.icon }}" style="color:var(--color-accent)"></i>{{ item.title }}</div>
+    <p class="card-body">{{ item.body }}</p>
+  </div>
+{% endmacro %}
+{% from _self import milestoneCard %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h6 style="color:var(--color-accent)">MISSION HISTORY</h6>
+    <h1>Milestones</h1>
+    <p class="text-muted" style="margin:0;font-size:13px;max-width:640px">Every major event of both spacecraft on one shared timeline, tagged by probe. Newest at the top, launch day at the bottom.</p>
+  </div>
+</div>
+
+<div x-data="milestonesFilter">
+  <div class="milestones-legend">
+    <span class="tag tag-v1 milestones-legend-btn" @click="toggle('voyager-1')" :class="isDimmed('voyager-1') ? 'is-dimmed' : ''">VOYAGER 1</span>
+    <span class="tag tag-v2 milestones-legend-btn" @click="toggle('voyager-2')" :class="isDimmed('voyager-2') ? 'is-dimmed' : ''">VOYAGER 2</span>
+  </div>
+
+  <div class="milestones-timeline">
+    <div class="milestones-timeline-line"></div>
+    <div class="milestones-rows">
+      {% for item in milestones %}
+      <div class="milestone-row" x-show="isVisible('{{ item.probe }}')">
+        <div class="milestone-slot milestone-slot--left">
+          {% if item.probe == 'voyager-1' %}{{ milestoneCard(item) }}{% endif %}
+        </div>
+        <div class="milestone-dot-col"><div class="milestone-dot"></div></div>
+        <div class="milestone-slot milestone-slot--right">
+          {% if item.probe == 'voyager-2' %}{{ milestoneCard(item) }}{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="hr"></div>
+<div class="footer-meta text-muted">
+  <span><i class="ph ph-database"></i> Data: NASA JPL mission history &middot; <a href="/sources">view all sources</a></span>
+  <span>{{ milestoneCount }} milestones &middot; {{ oldestYear }} &ndash; present</span>
+</div>
+
+{% endblock %}
