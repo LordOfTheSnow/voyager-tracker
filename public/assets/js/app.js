@@ -27,11 +27,25 @@ document.addEventListener('alpine:init', () => {
     dragging: false,
     lastX: 0,
     lastY: 0,
+    // Ratio of the SVG's actual rendered pixel width to its 900-unit viewBox. Labels inside
+    // the canvas are counter-scaled by 1/zoom so they don't grow with zoom, but that alone
+    // still leaves them shrinking with this ratio on a narrow screen -- the viewBox is fixed
+    // at 900 while the canvas itself renders much smaller than that on a phone. Multiplying
+    // the counter-scale by 1/canvasScale as well (see labelScale below) keeps label text a
+    // constant screen size regardless of viewport width, not just regardless of zoom.
+    canvasScale: 1,
 
     show() {
       this.open = true;
       this.scaleMode = 'log';
       this.resetView();
+      this.$nextTick(() => this.updateCanvasScale());
+    },
+    updateCanvasScale() {
+      const svg = this.$refs.canvas;
+      if (!svg) return;
+      const width = svg.getBoundingClientRect().width;
+      if (width > 0) this.canvasScale = width / 900;
     },
     hide() {
       this.open = false;
@@ -84,6 +98,9 @@ document.addEventListener('alpine:init', () => {
       const tx = this.panX + this.centerX - this.centerX * this.zoom;
       const ty = this.panY + this.centerY - this.centerY * this.zoom;
       return `translate(${tx}, ${ty}) scale(${this.zoom})`;
+    },
+    get labelScale() {
+      return 1 / (this.zoom * this.canvasScale);
     },
     get caption() {
       return this.scaleMode === 'log'

@@ -5,7 +5,7 @@
 {% macro milestoneCard(item) %}
   <div class="card elev-sm">
     <span class="tag {{ item.probe == 'voyager-1' ? 'tag-v1' : 'tag-v2' }} milestone-probe-tag">{{ item.probe == 'voyager-1' ? 'VOYAGER 1' : 'VOYAGER 2' }}</span>
-    <span class="tag tag-outline" style="font-size:10px">{{ item.dateLabel }}</span>
+    <span class="tag {{ item.probe == 'voyager-2' ? 'tag-v2' : 'tag-outline' }}" style="font-size:10px">{{ item.dateLabel }}</span>
     <div class="card-title milestone-card-title"><i class="ph ph-{{ item.icon }}" style="color:var(--color-accent)"></i>{{ item.title }}</div>
     <p class="card-body">{{ item.body }}</p>
   </div>

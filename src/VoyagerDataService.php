@@ -48,6 +48,12 @@ final class VoyagerDataService
         'neptune' => ['spkId' => '8', 'label' => 'Neptune'],
         'pluto' => ['spkId' => '9', 'label' => 'Pluto'],
     ];
+    // New Horizons only appears on the home orrery, as a third scale
+    // reference alongside Neptune -- this is the Voyager tracker, not a
+    // general probe tracker, so it deliberately has no probe card, detail
+    // page, or entry in the distance modal's body list. -98 is its NAIF
+    // spacecraft ID (same convention as the Voyagers' spkId above).
+    private const NEW_HORIZONS_SPK_ID = '-98';
 
     // Distance modal geometry: a much larger canvas, honestly showing all
     // bodies' real distances from the Sun on two alternate scales. Log scale
@@ -119,7 +125,7 @@ final class VoyagerDataService
     /** Same check for everything getSummary()/getOrreryLayout()/getDistanceModalLayout() touch. */
     public function isHomeDataFresh(): bool
     {
-        foreach ([...array_keys($this->probes), ...array_keys(self::HELIOCENTRIC_BODIES)] as $slug) {
+        foreach ([...array_keys($this->probes), ...array_keys(self::HELIOCENTRIC_BODIES), 'new-horizons'] as $slug) {
             if (!$this->cache->isFresh("live-{$slug}")) {
                 return false;
             }
@@ -301,6 +307,8 @@ final class VoyagerDataService
         $v2 = $this->fetchLive($this->probes['voyager-2']);
         $neptune = $this->getHeliocentricPosition('neptune', self::HELIOCENTRIC_BODIES['neptune']['spkId']);
         $neptuneAu = $neptune['distanceFromSunKm'] / self::AU_IN_KM;
+        $newHorizons = $this->getHeliocentricPosition('new-horizons', self::NEW_HORIZONS_SPK_ID);
+        $newHorizonsAu = $newHorizons['distanceFromSunKm'] / self::AU_IN_KM;
 
         $v1Au = $v1['distanceFromSunKm'] / self::AU_IN_KM;
         $v2Au = $v2['distanceFromSunKm'] / self::AU_IN_KM;
@@ -313,6 +321,7 @@ final class VoyagerDataService
         $v1Rel = Orrery::project($v1['eclipticLongitudeDeg'], $v1Au * $pxPerAu, 0.0, 0.0);
         $v2Rel = Orrery::project($v2['eclipticLongitudeDeg'], $v2Au * $pxPerAu, 0.0, 0.0);
         $neptuneRel = Orrery::project($neptune['eclipticLongitudeDeg'], $neptuneRadiusPx, 0.0, 0.0);
+        $newHorizonsRel = Orrery::project($newHorizons['eclipticLongitudeDeg'], $newHorizonsAu * $pxPerAu, 0.0, 0.0);
 
         // The "Heliopause (approx.)" label sits on the ring's upper-right
         // diagonal (see home.twig) -- its own rough footprint, in addition
@@ -320,10 +329,10 @@ final class VoyagerDataService
         $heliopauseLabelRightPx = $heliopauseRadiusPx * 0.7071 + 94.0;
         $heliopauseLabelUpPx = $heliopauseRadiusPx * 0.7071;
 
-        $reachRight = max($heliopauseRadiusPx, $heliopauseLabelRightPx, $v1Rel['x'] + self::HOME_ORRERY_LABEL_RIGHT_PX, $v2Rel['x'] + self::HOME_ORRERY_LABEL_RIGHT_PX, $neptuneRel['x'] + self::HOME_ORRERY_LABEL_RIGHT_PX);
-        $reachLeft = max($heliopauseRadiusPx, -$v1Rel['x'], -$v2Rel['x'], -$neptuneRel['x']);
-        $reachDown = max($heliopauseRadiusPx, $v1Rel['y'] + self::HOME_ORRERY_LABEL_DOWN_PX, $v2Rel['y'] + self::HOME_ORRERY_LABEL_DOWN_PX, $neptuneRel['y'] + self::HOME_ORRERY_LABEL_DOWN_PX);
-        $reachUp = max($heliopauseRadiusPx, $heliopauseLabelUpPx, -$v1Rel['y'], -$v2Rel['y'], -$neptuneRel['y']);
+        $reachRight = max($heliopauseRadiusPx, $heliopauseLabelRightPx, $v1Rel['x'] + self::HOME_ORRERY_LABEL_RIGHT_PX, $v2Rel['x'] + self::HOME_ORRERY_LABEL_RIGHT_PX, $neptuneRel['x'] + self::HOME_ORRERY_LABEL_RIGHT_PX, $newHorizonsRel['x'] + self::HOME_ORRERY_LABEL_RIGHT_PX);
+        $reachLeft = max($heliopauseRadiusPx, -$v1Rel['x'], -$v2Rel['x'], -$neptuneRel['x'], -$newHorizonsRel['x']);
+        $reachDown = max($heliopauseRadiusPx, $v1Rel['y'] + self::HOME_ORRERY_LABEL_DOWN_PX, $v2Rel['y'] + self::HOME_ORRERY_LABEL_DOWN_PX, $neptuneRel['y'] + self::HOME_ORRERY_LABEL_DOWN_PX, $newHorizonsRel['y'] + self::HOME_ORRERY_LABEL_DOWN_PX);
+        $reachUp = max($heliopauseRadiusPx, $heliopauseLabelUpPx, -$v1Rel['y'], -$v2Rel['y'], -$neptuneRel['y'], -$newHorizonsRel['y']);
 
         $sun = [
             'x' => $reachLeft + self::HOME_ORRERY_MARGIN_PX,
@@ -337,6 +346,7 @@ final class VoyagerDataService
             'neptuneRadiusPx' => $neptuneRadiusPx,
             'heliopauseRadiusPx' => $heliopauseRadiusPx,
             'neptune' => ['x' => $sun['x'] + $neptuneRel['x'], 'y' => $sun['y'] + $neptuneRel['y'], 'distanceLabel' => Formatter::distanceAu($neptuneAu)],
+            'newHorizons' => ['x' => $sun['x'] + $newHorizonsRel['x'], 'y' => $sun['y'] + $newHorizonsRel['y'], 'distanceLabel' => Formatter::distanceAu($newHorizonsAu)],
             'v1' => ['x' => $sun['x'] + $v1Rel['x'], 'y' => $sun['y'] + $v1Rel['y'], 'distanceLabel' => Formatter::distanceAu($v1Au)],
             'v2' => ['x' => $sun['x'] + $v2Rel['x'], 'y' => $sun['y'] + $v2Rel['y'], 'distanceLabel' => Formatter::distanceAu($v2Au)],
         ];

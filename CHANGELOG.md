@@ -8,6 +8,33 @@ project's first tagged version — 0.5.0 covers everything built so far, pre-1.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-08-22
+
+### Added
+
+- New Horizons now shown on the home dashboard orrery as a third scale reference alongside
+  Neptune — a plain, quiet marker with no pulse/contact halo or sun-line, unlike the Voyagers.
+  This is the Voyager tracker, not a general probe tracker, so it gets nothing beyond the
+  marker itself: no probe card, no detail page, no entry in the "Solar system — distances"
+  modal.
+
+### Changed
+
+- Milestones page: the Voyager 1 / Voyager 2 filter buttons are now centered directly over the
+  vertical timeline on desktop, instead of sitting left-aligned above it (still left-aligned on
+  mobile, matching the timeline's own left-edge line there).
+- Milestones page: Voyager 2's event date pills now use Voyager 2's own color instead of the
+  generic accent outline previously shared with Voyager 1's dates.
+
+### Fixed
+
+- Planet/probe labels on the home orrery and distance modal were still unreadably small on real
+  mobile phones despite 1.0.0's font-size bump. The actual cause was the SVG's fixed viewBox
+  scaling every label down again as the canvas rendered narrower — a static font-size increase
+  alone couldn't fully compensate. Labels are now counter-scaled against the canvas's actual
+  rendered pixel size, not just against zoom, keeping them a constant on-screen size regardless
+  of viewport width.
+
 ## [1.0.0] - 2026-08-21
 
 First stable release — the last two placeholder nav pages (Milestones, About) are now built out,

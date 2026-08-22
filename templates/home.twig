@@ -26,7 +26,7 @@
      positions (which is what made every inner body look permanently fused to the Sun: dot size
      and inter-body gap were scaling by the same factor, so their ratio never improved). #}
   <g transform="translate({{ body.x }}, {{ body.y }})">
-    <g :transform="'scale(' + (1 / zoom) + ')'">
+    <g :transform="'scale(' + labelScale + ')'">
       {% if slug == 'sun' %}
         {% if sunZoomScale %}
           {# This label stays in the counter-scaled, screen-constant space like every other
@@ -97,6 +97,14 @@
       <text x="{{ orrery.neptune.x + 8 }}" y="{{ orrery.neptune.y + 4 }}" font-size="11px" fill="var(--color-text)">Neptune</text>
       <text x="{{ orrery.neptune.x + 8 }}" y="{{ orrery.neptune.y + 17 }}" font-size="9px" fill="var(--color-neutral-500)">{{ orrery.neptune.distanceLabel }}</text>
 
+      {# New Horizons: a third scale reference alongside Neptune, styled just as quietly (plain
+         dot, no pulse/contact halo, no sun-line) -- this is the Voyager tracker, not a general
+         probe tracker, so it's here only to give a sense of scale and gets nothing beyond this
+         marker: no card, no detail page, no distance-modal entry. #}
+      <circle cx="{{ orrery.newHorizons.x }}" cy="{{ orrery.newHorizons.y }}" r="4" fill="var(--color-neutral-300)"></circle>
+      <text x="{{ orrery.newHorizons.x + 8 }}" y="{{ orrery.newHorizons.y + 4 }}" font-size="11px" fill="var(--color-text)">New Horizons</text>
+      <text x="{{ orrery.newHorizons.x + 8 }}" y="{{ orrery.newHorizons.y + 17 }}" font-size="9px" fill="var(--color-neutral-500)">{{ orrery.newHorizons.distanceLabel }}</text>
+
       <circle cx="{{ orrery.sun.x }}" cy="{{ orrery.sun.y }}" r="{{ orrery.heliopauseRadiusPx }}" fill="none" stroke="var(--color-accent-500)" stroke-width="1.5" stroke-dasharray="6 5"></circle>
       <text x="{{ orrery.sun.x + orrery.heliopauseRadiusPx * 0.7071 + 4 }}" y="{{ orrery.sun.y - orrery.heliopauseRadiusPx * 0.7071 }}" font-size="10px" fill="var(--color-accent-500)">Heliopause (approx.)</text>
 
@@ -151,7 +159,7 @@
 </div>
 
 <div x-data="distanceModal" x-on:open-distance-modal.window="show()" x-show="open" x-cloak
-     class="modal-overlay" @keydown.escape.window="hide()">
+     class="modal-overlay" @keydown.escape.window="hide()" @resize.window="updateCanvasScale()">
   <div class="modal-panel" @click.outside="hide()">
     <div class="modal-head">
       <span class="card-title">Solar system — distances</span>
@@ -170,7 +178,7 @@
       </div>
     </div>
 
-    <svg class="modal-canvas" viewBox="0 0 900 900" width="100%" height="900"
+    <svg class="modal-canvas" x-ref="canvas" viewBox="0 0 900 900" width="100%" height="900"
          :style="dragging ? 'cursor:grabbing' : 'cursor:grab'"
          @wheel.prevent="onWheel($event)"
          @mousedown="startDrag($event)" @mousemove.window="drag($event)" @mouseup.window="endDrag()"
@@ -185,7 +193,7 @@
           {# Label sits on the ring's upper-right diagonal (not straight right/up) so it stays
              inside the 0-900 viewBox even at the linear scale's much larger radius. #}
           <g transform="translate({{ 450 + distanceModal.heliopause.logRadiusPx * 0.7071 }}, {{ 450 - distanceModal.heliopause.logRadiusPx * 0.7071 }})">
-            <g :transform="'scale(' + (1 / zoom) + ')'">
+            <g :transform="'scale(' + labelScale + ')'">
               <text x="6" y="-6" font-size="10px" fill="var(--color-accent-500)">{{ distanceModal.heliopause.label }} &middot; {{ distanceModal.heliopause.distanceLabel }}</text>
             </g>
           </g>
@@ -200,7 +208,7 @@
              non-scaling treatment as the log-scale ring above, for the same reason. #}
           <circle cx="450" cy="450" r="{{ distanceModal.heliopause.linearRadiusPx }}" fill="none" stroke="var(--color-accent-500)" stroke-width="1.5" stroke-dasharray="6 5" vector-effect="non-scaling-stroke"></circle>
           <g transform="translate({{ 450 + distanceModal.heliopause.linearRadiusPx * 0.7071 }}, {{ 450 - distanceModal.heliopause.linearRadiusPx * 0.7071 }})">
-            <g :transform="'scale(' + (1 / zoom) + ')'">
+            <g :transform="'scale(' + labelScale + ')'">
               <text x="6" y="-6" font-size="10px" fill="var(--color-accent-500)">{{ distanceModal.heliopause.label }} &middot; {{ distanceModal.heliopause.distanceLabel }}</text>
             </g>
           </g>

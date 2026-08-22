@@ -1,6 +1,6 @@
 # Voyager Distance Tracker
 
-[![Version](https://img.shields.io/badge/version-1.0.0-9184d9)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.1.0-9184d9)](CHANGELOG.md)
 [![PHP](https://img.shields.io/badge/PHP-8.1%2B-f97316?logo=php&logoColor=white)](https://www.php.net/)
 [![Database](https://img.shields.io/badge/database-none%20%28by%20design%29-4a6fe3)](#architecture)
 [![License](https://img.shields.io/badge/license-MIT-22c55e)](LICENSE)
@@ -28,8 +28,9 @@ on their public data.
   band's real deep-space frequency range (e.g. "X-band · 8,400–8,450 MHz")
   and a unit clarification for the data rate ("bps = bits per second").
 - Home dashboard orrery drawn to true relative scale: Sun, Neptune, the
-  heliopause boundary, and both probes, sized dynamically around whatever the
-  live data actually needs.
+  heliopause boundary, New Horizons (shown only here, as a scale reference —
+  this is the Voyager tracker, not a general probe tracker), and both probes,
+  sized dynamically around whatever the live data actually needs.
 - "Solar system — distances" modal with pan/zoom log-scale and true-linear-scale views
   of the whole solar system, including Mars, with a note on which direction
   the bodies orbit.

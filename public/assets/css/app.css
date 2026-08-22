@@ -266,7 +266,7 @@ a:hover { color: var(--color-accent-300); }
 .about-hero-content { position: relative; z-index: 2; max-width: 640px; }
 .about-text-card { padding: var(--space-4); }
 
-.milestones-legend { display: flex; gap: var(--space-3); margin-bottom: var(--space-4); }
+.milestones-legend { display: flex; gap: var(--space-3); margin-bottom: var(--space-4); justify-content: center; }
 .milestones-legend-btn { cursor: pointer; user-select: none; font-size: 11px; font-weight: 600; padding: 4px 10px; transition: opacity .15s; }
 .milestones-legend-btn.is-dimmed { opacity: .4; }
 
@@ -308,6 +308,7 @@ a:hover { color: var(--color-accent-300); }
   .nav { padding: var(--space-3) var(--space-4); }
   h1 { font-size: 32px; }
 
+  .milestones-legend { justify-content: flex-start; }
   .milestones-timeline-line { left: 10px; transform: none; }
   .milestone-row { grid-template-columns: 20px 1fr; grid-template-areas: "dot card"; align-items: start; }
   .milestone-slot--left, .milestone-slot--right { grid-area: card; justify-self: stretch; max-width: none; }

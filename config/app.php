@@ -17,7 +17,7 @@ $cacheTtlMinutes = intdiv($cacheTtlSeconds, 60);
 
 return [
     // Keep in sync with composer.json's "version" and CHANGELOG.md's latest entry.
-    'version' => '1.0.0',
+    'version' => '1.1.0',
     'cacheDir' => dirname(__DIR__) . '/var/cache',
     'cacheTtlSeconds' => $cacheTtlSeconds,
     // Derived from cacheTtlSeconds (rather than hardcoded) so it can't drift
