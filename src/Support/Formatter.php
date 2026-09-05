@@ -94,6 +94,20 @@ final class Formatter
         return number_format(self::daysSince($isoDate));
     }
 
+    // Calendar-aware (not a division of daysSince()'s total) so months/days stay
+    // in the ranges a human expects -- e.g. never "13 m".
+    public static function yearsMonthsDaysSince(string $isoDate): string
+    {
+        $start = new \DateTimeImmutable($isoDate, new \DateTimeZone('UTC'));
+        $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+        $diff = $start->diff($now);
+
+        $years = $diff->y === 1 ? '1 yr' : "{$diff->y} yrs";
+        $days = $diff->d === 1 ? '1 day' : "{$diff->d} days";
+
+        return "{$years}, {$diff->m} m, {$days}";
+    }
+
     public static function dataRate(float $bps): string
     {
         if ($bps >= 1_000_000) {

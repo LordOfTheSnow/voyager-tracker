@@ -8,6 +8,24 @@ project's first tagged version — 0.5.0 covers everything built so far, pre-1.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-09-05
+
+Released on Voyager 1's 49th launch anniversary — September 5, 1977 to September 5, 2026,
+coincidentally the same day the new years/months/days mission-duration display below shipped.
+
+### Added
+
+- Each probe's detail page now also shows "Days since launch" as a human-readable
+  years/months/days duration (e.g. "49 yrs, 0 m, 0 days") alongside the existing day count.
+
+### Changed
+
+- Diagram layout math for the home orrery, the "Solar system — distances" modal, and the
+  per-probe ecliptic-angle diagram moved out of `VoyagerDataService` and into `Orrery` as pure,
+  network-free functions (`homeLayout()`, `distanceModalLayout()`, `eclipticDiagram()`) — no
+  visible behavior change, but the layout math is now directly unit-tested rather than only
+  indirectly exercised through the data service.
+
 ## [1.1.0] - 2026-08-22
 
 ### Added

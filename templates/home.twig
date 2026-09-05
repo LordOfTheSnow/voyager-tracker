@@ -3,7 +3,7 @@
 {% macro distanceModalBody(slug, body, v1, v2, sunRadiusPx, sunZoomScale) %}
   {% if slug not in ['sun', 'v1', 'v2'] %}
     {# V1/V2 are on escape trajectories, not closed orbits, so no ring for them. Center must match
-       VoyagerDataService::DISTANCE_MODAL_CENTER. vector-effect keeps the stroke a constant
+       Orrery::DISTANCE_MODAL_CENTER. vector-effect keeps the stroke a constant
        hairline regardless of zoom -- without it, zooming in thickened every ring right along
        with its radius. #}
     <circle cx="450" cy="450" r="{{ body.radiusPx }}" fill="none" stroke="var(--color-divider)" stroke-width="1" vector-effect="non-scaling-stroke"></circle>
