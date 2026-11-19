@@ -8,7 +8,7 @@ project's first tagged version — 0.5.0 covers everything built so far, pre-1.0
 
 ## [Unreleased]
 
-## [1.1.2] - 2026-11-17
+## [1.1.2] - 2026-11-19
 
 ### Added
 
