@@ -8,6 +8,28 @@ project's first tagged version — 0.5.0 covers everything built so far, pre-1.0
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-11-17
+
+### Added
+
+- Milestone: Voyager 1 reaches one light day from Earth (Nov 18, 2026).
+
+### Changed
+
+- Reworded the tooltip on each probe's next light-day crossing date. It now explains that the
+  date marks when signals *received from* the probe take a full day to reach Earth (Horizons'
+  light-time-corrected one-way light time), and that distance-based trackers and news reports
+  reach the same milestone up to ~16 hours earlier by design, not by error.
+
+### Fixed
+
+- One-way light time is now rounded down to the whole minute instead of to the nearest minute.
+  Voyager 1 already showed "24h 0m" while still ~10 seconds short of a full light-day (two days
+  before its actual crossing), contradicting the projected crossing date shown right below it.
+- The next light-day crossing date vanished for Voyager 1 once it passed 1 light day: its next
+  target, 2 light days (~2075), was beyond the 20-year lookahead window. The scan now runs to the
+  end of Horizons' Voyager trajectory data (2099-12-30).
+
 ## [1.1.1] - 2026-09-05
 
 Released on Voyager 1's 49th launch anniversary — September 5, 1977 to September 5, 2026,

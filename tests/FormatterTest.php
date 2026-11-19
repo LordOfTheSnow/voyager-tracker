@@ -22,4 +22,15 @@ final class FormatterTest extends TestCase
 
         $this->assertSame('1 yr, 1 m, 1 day', Formatter::yearsMonthsDaysSince($isoDate));
     }
+
+    public function testOneWayLightTimeDoesNotRoundUpToAFullLightDay(): void
+    {
+        // Voyager 1 on 2026-11-17: ~10 s short of a full light-day.
+        $this->assertSame('23h 59m', Formatter::oneWayLightTime(1439.835));
+    }
+
+    public function testOneWayLightTimeShowsFullLightDayOnceCrossed(): void
+    {
+        $this->assertSame('24h 0m', Formatter::oneWayLightTime(1440.0));
+    }
 }

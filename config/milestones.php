@@ -10,6 +10,14 @@ declare(strict_types=1);
 
 return [
     [
+        'date' => '2026-11-18',
+        'dateLabel' => 'Nov 18, 2026',
+        'probe' => 'voyager-1',
+        'icon' => 'clock',
+        'title' => 'One light day from Earth',
+        'body' => 'The first human-made object to reach a full light day from Earth: a signal sent from Voyager 1 now takes 24 hours to arrive, and a command and its reply take two days.',
+    ],
+    [
         'date' => '2026-08-04',
         'dateLabel' => 'Aug 4, 2026',
         'probe' => 'voyager-2',

@@ -34,7 +34,7 @@
   <div class="card elev-sm">
     <span class="card-kicker">One-way light time</span>
     <div class="detail-stat-value">{{ probe.oneWayLightTime }}</div>
-    {% if probe.lightDayCrossingLabel %}<div class="text-muted detail-stat-sub" style="cursor:help" title="Uses Horizons' light-time-corrected one-way light time — the true travel time of the light arriving right now. Other trackers using the probe's instantaneous (not light-time-corrected) distance can land up to ~16 hours earlier for the same crossing.">{{ probe.lightDayCrossingLabel }}</div>{% endif %}
+    {% if probe.lightDayCrossingLabel %}<div class="text-muted detail-stat-sub" style="cursor:help" title="When signals received from the probe will take a full day (or more) to reach Earth — based on Horizons' light-time-corrected one-way light time. Distance-based trackers and news reports, which use the probe's current distance, reach the same milestone up to ~16 hours earlier. Both are valid: one measures distance, the other signal travel time.">{{ probe.lightDayCrossingLabel }}</div>{% endif %}
   </div>
 </div>
 

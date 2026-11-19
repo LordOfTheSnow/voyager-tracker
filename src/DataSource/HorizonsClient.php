@@ -79,16 +79,18 @@ final class HorizonsClient
      * not the Sun) swing between roughly -8 and +41 km/s over a year --
      * fast enough that a naive constant-rate projection can land months off
      * for a probe already close to a crossing. Real future ephemeris
-     * samples are the only way to capture that. 10-day steps keep the
-     * request to a few hundred rows even over a decade-plus span while
-     * still resolving that annual wobble.
+     * samples are the only way to capture that. 10-day steps still resolve
+     * that annual wobble, at the cost of a few thousand rows when scanning
+     * decades ahead.
      *
+     * @param string $stopDate UTC 'Y-m-d'; must not exceed the target's
+     *     ephemeris coverage, or Horizons returns no rows at all
      * @return list<array{date: int, lightTimeMinutes: float}> date is a Unix timestamp
      */
-    public function fetchEarthLightTimeSeries(string $spkId, int $spanDays, string $stepSize = '10d'): array
+    public function fetchEarthLightTimeSeries(string $spkId, string $stopDate, string $stepSize = '10d'): array
     {
         $start = gmdate('Y-m-d H:i');
-        $stop = gmdate('Y-m-d H:i', time() + $spanDays * 86400);
+        $stop = $stopDate;
 
         $result = $this->fetchEphemeris($spkId, center: '500@399', quantities: '20,21', start: $start, stop: $stop, stepSize: $stepSize);
 

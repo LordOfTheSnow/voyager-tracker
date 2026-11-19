@@ -42,8 +42,9 @@ Both clients delegate actual response parsing to standalone, network-free classe
 likely to silently break if either upstream changes its response shape — is unit-testable against
 fixture text/XML without hitting the network. Keep that split when touching either client.
 
-`HorizonsClient::fetchEarthLightTimeSeries()` is a third, much heavier Horizons call — a ~700-row,
-20-year future ephemeris scan, cached separately for 24h via `FileCache::remember()`'s per-call TTL
+`HorizonsClient::fetchEarthLightTimeSeries()` is a third, much heavier Horizons call — a ~2,700-row
+future ephemeris scan running to 2099-12-30 (the end of Horizons' Voyager trajectory data; Voyager 1's
+2-light-day crossing is ~2076), cached separately for 24h via `FileCache::remember()`'s per-call TTL
 override — used only to project when each probe's one-way light time will next cross a whole
 light-day boundary (`App\Support\LightDayProjection`). That projection deliberately does *not*
 extrapolate from a single current-speed reading the way "speed" above does: Earth's own orbital

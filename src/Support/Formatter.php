@@ -74,7 +74,9 @@ final class Formatter
 
     private static function hoursAndMinutes(float $totalMinutes): string
     {
-        $totalMinutes = (int) round($totalMinutes);
+        // Floor, not round: a light-time readout must never claim a threshold (e.g. a full
+        // light-day, 24h 0m) before it is actually crossed -- 1439.8 min is still 23h 59m.
+        $totalMinutes = (int) floor($totalMinutes);
         $hours = intdiv($totalMinutes, 60);
         $minutes = $totalMinutes % 60;
 

@@ -38,9 +38,12 @@ final class VoyagerDataService
     // Light-day crossing projection (see LightDayProjection): a wide-span,
     // coarse-step future ephemeris scan, cached far longer than everything
     // else in this class since the answer barely shifts day to day.
-    // 20 years / 10-day steps comfortably covers both probes' crossings
-    // (V2's is the slower of the two) in one ~700-row Horizons request.
-    private const LIGHT_DAY_SERIES_SPAN_DAYS = 20 * 365;
+    // The scan runs to the end of Horizons' Voyager trajectory data (it
+    // has none past 2099-12-31). A 20-year window used to be enough, but
+    // once Voyager 1 passed 1 light day (Nov 2026) its next target became
+    // 2 light days, around 2076, so it needs the full range. That's about
+    // 2,700 rows / ~190 KB per probe at 10-day steps, fetched once a day.
+    private const LIGHT_DAY_SERIES_STOP_DATE = '2099-12-30';
     private const LIGHT_DAY_SERIES_STEP = '10d';
     private const LIGHT_DAY_SERIES_CACHE_TTL_SECONDS = 24 * 60 * 60;
 
@@ -169,8 +172,10 @@ final class VoyagerDataService
     {
         try {
             $cached = $this->cache->remember(
-                "lightday-series-{$spkId}",
-                fn () => ['series' => $this->horizons->fetchEarthLightTimeSeries($spkId, self::LIGHT_DAY_SERIES_SPAN_DAYS, self::LIGHT_DAY_SERIES_STEP)],
+                // "-to2099" in the key forces a refetch on deploy, so an
+                // already-cached 20-year series isn't kept for up to 24h.
+                "lightday-series-to2099-{$spkId}",
+                fn () => ['series' => $this->horizons->fetchEarthLightTimeSeries($spkId, self::LIGHT_DAY_SERIES_STOP_DATE, self::LIGHT_DAY_SERIES_STEP)],
                 self::LIGHT_DAY_SERIES_CACHE_TTL_SECONDS,
             );
 
